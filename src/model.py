@@ -70,8 +70,8 @@ class CATEModel(th.nn.Module):
         assert x.size(dim=0) == t.size(dim=0), "x and t should be aligned along their first axis! was " \
                                                f"{x.size(dim=0), t.size(dim=0)} instead."
         representation = self.get_representation(x)
-        mask = t==0
-        expected_values = mask*self.heads[0].forward(representation).squeeze(-1) + \
-                          ~mask*self.heads[1].forward(representation).squeeze(-1)
+        mask = t == 0
+        expected_values = mask * self.heads[0].forward(representation).squeeze(-1) + \
+                          ~mask * self.heads[1].forward(representation).squeeze(-1)
 
         return expected_values.unsqueeze(-1)
