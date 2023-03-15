@@ -12,3 +12,6 @@ If neither of these work I would first install pipenv using either
 Make sure you have python 3.8 installed! This is the same runtime google colab is using, so if you do not use this this will lead to problems later.
 
 You can add new packages (if neccessary), using
+
+`pipenv install pandas` or
+`python -m pipenv install pandas`
