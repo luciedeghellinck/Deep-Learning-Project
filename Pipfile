@@ -9,6 +9,7 @@ python_version = "3.8"
 [packages]
 torch = "*"
 pandas = "*"
+pytest = "*"
 
 [dev-packages]
-# pytest = "*"
+pytest = "*"

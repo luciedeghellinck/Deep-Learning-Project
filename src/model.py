@@ -11,10 +11,10 @@ class CATEModel(th.nn.Module):
         super().__init__()
         self.alpha = alpha
         # initialize representation network phi first
-        self.phi: th.nn.Module = initialize_phi(input_size, n_hidden_layers, dim_hidden_layers)
+        self.phi = self.__initialize_phi(input_size, n_hidden_layers, dim_hidden_layers)
         # Then initialize the two seperate heads indexed at 0 and 1 (easy t indexing)
-        self.heads = (__initialize_head(n_hidden_layers, dim_hidden_layers),
-                      __initialize_head(n_hidden_layers, dim_hidden_layers))
+        self.heads = (self.__initialize_head(n_hidden_layers, dim_hidden_layers),
+                      self.__initialize_head(n_hidden_layers, dim_hidden_layers))
 
     @staticmethod
     def __initialize_phi(input_size: int,
@@ -31,7 +31,7 @@ class CATEModel(th.nn.Module):
                 th.nn.Linear(in_features=dim_hidden_layers, out_features=dim_hidden_layers),
                 th.nn.ReLU()
             ]
-        return th.nn.Sequential(layers)
+        return th.nn.Sequential(*layers)
 
     @staticmethod
     def __initialize_head(n_hidden_layers: int,
@@ -50,7 +50,7 @@ class CATEModel(th.nn.Module):
             th.nn.Linear(in_features=dim_hidden_layers, out_features=1)
         ]
 
-        return th.nn.Sequential(layers)
+        return th.nn.Sequential(*layers)
 
     def forward(self, x: th.Tensor) -> th.Tensor:
         # Forward in the case of only an x value, means getting the tau for a given example.
@@ -70,6 +70,8 @@ class CATEModel(th.nn.Module):
         assert x.size(dim=0) == t.size(dim=0), "x and t should be aligned along their first axis! was " \
                                                f"{x.size(dim=0), t.size(dim=0)} instead."
         representation = self.get_representation(x)
-        expected_values = th.stack([self.heads[0].forward(representation),
-                                    self.heads[1].forward(representation)], dim=0)
-        return expected_values[t, :, :]
+        mask = t==0
+        expected_values = mask*self.heads[0].forward(representation).squeeze(-1) + \
+                          ~mask*self.heads[1].forward(representation).squeeze(-1)
+
+        return expected_values.unsqueeze(-1)
