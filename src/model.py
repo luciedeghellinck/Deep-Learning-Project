@@ -7,35 +7,40 @@ class CATEModel(th.nn.Module):
                  input_size: int,
                  n_hidden_layers: int,
                  dim_hidden_layers: int,
-                 alpha: float) -> None:
+                 alpha: float,
+                 dropout_rate: float = 0.2) -> None:
         super().__init__()
         self.alpha = alpha
         # initialize representation network phi first
-        self.phi = self.__initialize_phi(input_size, n_hidden_layers, dim_hidden_layers)
+        self.phi = self.__initialize_phi(input_size, n_hidden_layers, dim_hidden_layers, dropout_rate)
         # Then initialize the two seperate heads indexed at 0 and 1 (easy t indexing)
-        self.heads = (self.__initialize_head(n_hidden_layers, dim_hidden_layers),
-                      self.__initialize_head(n_hidden_layers, dim_hidden_layers))
+        self.heads = (self.__initialize_head(n_hidden_layers, dim_hidden_layers, dropout_rate),
+                      self.__initialize_head(n_hidden_layers, dim_hidden_layers, dropout_rate))
 
     @staticmethod
     def __initialize_phi(input_size: int,
                          n_hidden_layers: int,
-                         dim_hidden_layers: int) -> th.nn.Module:
+                         dim_hidden_layers: int,
+                         dropout_rate: float) -> th.nn.Module:
         # In the original paper it is not actually specified what the neural network architecture looks like
         # For now I will be going for an architecture of size n_hidden_layers, dim_hidden_layers with ReLU inbetween
         layers = [
             th.nn.Linear(in_features=input_size, out_features=dim_hidden_layers),
+            th.nn.Dropout(p=dropout_rate),
             th.nn.ReLU(),
         ]
         for _ in range(n_hidden_layers):
             layers += [
                 th.nn.Linear(in_features=dim_hidden_layers, out_features=dim_hidden_layers),
+                th.nn.Dropout(p=dropout_rate),
                 th.nn.ReLU()
             ]
         return th.nn.Sequential(*layers)
 
     @staticmethod
     def __initialize_head(n_hidden_layers: int,
-                          dim_hidden_layers: int) -> th.nn.Module:
+                          dim_hidden_layers: int,
+                          dropout_rate: float) -> th.nn.Module:
         # In the original paper it is not actually specified what the neural network architecture looks like
         # For now I will be going for an architecture of size n_hidden_layers, dim_hidden_layers with ReLU inbetween
         layers = []
@@ -43,11 +48,13 @@ class CATEModel(th.nn.Module):
         for _ in range(n_hidden_layers):
             layers += [
                 th.nn.Linear(in_features=dim_hidden_layers, out_features=dim_hidden_layers),
+                th.nn.Dropout(p=dropout_rate),
                 th.nn.ReLU()
             ]
         # single output value for h_t
         layers += [
-            th.nn.Linear(in_features=dim_hidden_layers, out_features=1)
+            th.nn.Linear(in_features=dim_hidden_layers, out_features=1),
+            th.nn.Dropout(p=dropout_rate),
         ]
 
         return th.nn.Sequential(*layers)
