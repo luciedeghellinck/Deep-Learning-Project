@@ -15,14 +15,6 @@ def plugInTau(x, t, y, f0, f1, regression):
     Returns:
       A float representing the plug-in predictor for the datapoint [X,T,Y] given the hypotheses functions f0 and f1 as well as the propensity regression function.
     """
-    if fT == 0:
-        fT = f0
-    else:
-        fT = f1
-
-    propensity = propensityEstimate(regression, x)
-
-    return (t - propensity) / (propensity(1 - propensity)) * (y - fT(x)) + f1(x) - f0(x)
 
 
 def candidatePredictorTau(x, MLAlgorithm, metalearner):

@@ -1,5 +1,5 @@
 import torch as th
-import pandas as pd
+import numpy as np
 from torch.utils.data import TensorDataset
 
 
@@ -12,7 +12,7 @@ class Dataset(TensorDataset):
      (add file type)
     """
 
-    def __init__(self, csv_path):
+    def __init__(self, data_path):
         ##Should I use a super init? I don't understand it's use in the assignements...
         """
            Takes a dataset as input and returns a parsed Torch tensor where each
@@ -20,11 +20,11 @@ class Dataset(TensorDataset):
            and the outcome for a particular person.
         """
 
-        data = pd.read_csv(csv_path)
+        data = np.load(data_path)
 
         # Each n row represents a person; the first column is the m dimensional float
         # feature vector, the second column is the 0/1 treatment type, and the
         # third column is the float outcome.
-        super().__init__(th.tensor(data.iloc[:, 2:].values, dtype=th.float32),
-                         th.tensor(data.iloc[:, 0].values, dtype=th.int64),
-                         th.tensor(data.iloc[:, 1].values, dtype=th.float32))
+        super().__init__(th.tensor(data['x'], dtype=th.float32),
+                         th.tensor(data['t'], dtype=th.int64),
+                         th.tensor(data['yf'], dtype=th.float32))
