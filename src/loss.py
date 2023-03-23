@@ -1,15 +1,10 @@
 import torch as th
-import scipy
-from propensity_score import propensityRegression
 from typing import Tuple
-from model import CATEModel
+from src.model import CATEModel
 from scipy.stats import wasserstein_distance
-from torch.utils.data import DataLoader
 
 
-def IPM(dataset: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
-        prediction_treated: torch.Tensor,
-        prediction_untreated: torch.Tensor, model: CATEModel):
+def IPM(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], model: CATEModel) -> th.Tensor:
     """
   Calculates the IPM distance for two probability functions.
 
