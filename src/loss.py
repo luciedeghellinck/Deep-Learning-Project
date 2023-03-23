@@ -17,17 +17,19 @@ def IPM(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], model: CATEModel) -> th
   Returns:
     The IPM distance evaluated on all
   """
-    indices_not_treated = th.nonzero(dataset[1] == 0)
-    indices_treated = th.nonzero(dataset[1] == 1)
+    with th.no_grad():
+        indices_not_treated = th.nonzero(dataset[1] == 0)
+        indices_treated = th.nonzero(dataset[1] == 1)
 
-    x_not_treated = dataset[0][indices_not_treated]
-    x_treated = dataset[0][indices_treated]
+        x_not_treated = dataset[0][indices_not_treated].squeeze(dim=1)
+        x_treated = dataset[0][indices_treated].squeeze(dim=1)
 
-    representation_no_treatment = model.get_representation(x_not_treated)
-    representation_treatment = model.get_representation(x_treated)
-    ipm = wasserstein_distance(representation_no_treatment, representation_treatment)
+        representation_no_treatment = model.get_representation(x_not_treated)
+        representation_treatment = model.get_representation(x_treated)
 
-    return ipm
+        ipm = wasserstein_distance(representation_no_treatment.squeeze(dim=-1), representation_treatment.squeeze(dim=-1))
+
+    return th.Tensor([ipm])
 
 
 def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
