@@ -12,6 +12,7 @@ torchvision = "*"
 tqdm = "*"
 pandas = "*"
 jupyter = "*"
+scipy = "*"
 
 [dev-packages]
 pytest = "*"
