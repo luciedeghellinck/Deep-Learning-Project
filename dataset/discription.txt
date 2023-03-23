@@ -1,0 +1,6 @@
+Variables in the .npz 
+x, covariates： features
+t, treatment 
+yf, factual outcome: protential outcome under the treatment policy t
+ycf, counterfactual outcome: protential outcome under a different treatment policy t-1
+mu0, mu1, noiseless potential outcomes respectively.
