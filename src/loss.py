@@ -21,7 +21,7 @@ def IPM(dataset: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
   """
 
 
-def weight(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor]) -> th.Tensor:
+def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
     """
     Calculates the weight for a given feature vector and a given treatment type.
 
