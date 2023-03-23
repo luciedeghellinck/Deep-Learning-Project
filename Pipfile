@@ -7,7 +7,9 @@ name = "pypi"
 python_version = "3.8"
 
 [packages]
-torch = "*"
+torch = ">=2.0.0"
+torchvision = "*"
+tqdm = "*"
 pandas = "*"
 jupyter = "*"
 

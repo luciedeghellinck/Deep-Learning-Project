@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 from typing import Tuple
 
 
-def propensityRegression(dataset: DataLoader[Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]]) -> torch.nn.Module:
+def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
     """
     Evaluates a regression function for the propensity given the known propensity scores
 
