@@ -25,6 +25,6 @@ class Dataset(TensorDataset):
         # Each n row represents a person; the first column is the m dimensional float
         # feature vector, the second column is the 0/1 treatment type, and the
         # third column is the float outcome.
-        super().__init__(th.tensor(data['x'], dtype=th.float32),
-                         th.tensor(data['t'], dtype=th.int64),
-                         th.tensor(data['yf'], dtype=th.float32))
+        super().__init__(th.from_numpy(data['x']),
+                         th.from_numpy(data['t']).int(),
+                         th.from_numpy(data['yf']))
