@@ -93,4 +93,5 @@ class CATEModel(th.nn.Module):
         expected_values = mask * self.head_0.forward(representation).squeeze(-1) + \
                           ~mask * self.head_1.forward(representation).squeeze(-1)
 
-        return expected_values.unsqueeze(-1)
+        # return expected_values.unsqueeze(-1)
+        return expected_values
