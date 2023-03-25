@@ -202,7 +202,7 @@ def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, a
     adapted_weights = adaptedWeight(dataset)
     mseLoss = th.nn.MSELoss(reduction='none')
     # l is a tensor with n elements (n being the number of people in the dataset)
-    l = mseLoss(model.get_hypothesis(dataset[0], dataset[1]), dataset[2])  # The first term gives the hypothesis using X (dataset[0]) using the value of T (dataset[1]), the MSE loss is calculated by comparing f(t=0)/f(t=1) with the observed Y (dataset[2]),
+    l = mseLoss(th.squeeze(model.get_hypothesis(dataset[0], dataset[1])), dataset[2])  # The first term gives the hypothesis using X (dataset[0]) using the value of T (dataset[1]), the MSE loss is calculated by comparing f(t=0)/f(t=1) with the observed Y (dataset[2]),
     empirical_weighted_risk = th.dot(adapted_weights, l) / dataset[0].size()[0]
 
     sinkhorn = SinkhornDistance(100, 1000)
