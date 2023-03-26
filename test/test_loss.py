@@ -22,6 +22,7 @@ class TestLoss:
         dataset = (x, t, y)
         pi_0 = pi(dataset, 0)
 
+        # This assert doesn't work although l has a size of 1
         assert pi_0.size() == 1
 
     def test_adaptedWeight(self):
@@ -43,6 +44,7 @@ class TestLoss:
 
         l = loss(dataset, model, 0.05)
 
+        #This assert doesn't work although l has a size of 1
         assert l.size() == 1
 
 
