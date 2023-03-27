@@ -1,8 +1,5 @@
-
 from typing import Tuple
-from sklearn.linear_model import LogisticRegression
 import torch
-from torch.utils.data import DataLoader
 
 def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
     """
@@ -22,11 +19,7 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     # return prop_score
     # Call propensityScore to use the propensity for each input feature vector
 
-    data_loader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
-
-    for batch in data_loader:
-        X, T, _ = batch
-        break
+    X, T, _ = dataset
 
     # logistic regression model
     model = torch.nn.Sequential(
