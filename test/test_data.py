@@ -1,12 +1,12 @@
 import torch as th
 from torch.utils.data import DataLoader
 
-from src.data import Dataset
+from src.data import ihdpDataset
 
 class TestDataset:
 
     def test_loading_ihdp(self):
-        dataset = Dataset("../ihdp_npci_1-100.test.npz")
+        dataset = ihdpDataset("../ihdp_npci_1-100.test.npz")
         loader = DataLoader(dataset, batch_size=64)
 
         for item in loader:
@@ -19,5 +19,5 @@ class TestDataset:
             assert isinstance(y, th.Tensor)
             print(x.size())
             assert len(x.size()) == 2
-            assert len(t.size()) == 2
-            assert len(y.size()) == 2
+            assert len(t.size()) == 1
+            assert len(y.size()) == 1

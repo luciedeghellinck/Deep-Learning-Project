@@ -12,6 +12,6 @@ class ihdpDataset(TensorDataset):
         # self.T = torch.tensor(t_reshape, dtype=torch.float32)
         # self.Y = torch.tensor(y_reshape, dtype=torch.float32)
         super().__init__(th.from_numpy(x_reshape),
-                         th.from_numpy(t_reshape).int(),
-                         th.from_numpy(y_reshape))
+                         th.from_numpy(t_reshape).int().squeeze(-1),
+                         th.from_numpy(y_reshape).squeeze(-1))
 
