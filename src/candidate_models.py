@@ -24,5 +24,3 @@ def candidatePredictorTau(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], Xt
     effect = est.effect(Xtest.numpy())
     return th.from_numpy(effect)
 
-# def performanceEstimator(tau: th.Tensor, candidate: th.Tensor):
-
