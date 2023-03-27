@@ -52,6 +52,7 @@ class TestLoss:
                                                                                (1, 3),
                                                                                (25, 3)])
     def test_loss_values(self, representation_dimension, distribution_offset):
+        th.random.manual_seed(1)
         t_first = th.zeros(200)
         t_second = th.ones(200)
         x_first = th.rand(200, representation_dimension)
@@ -63,7 +64,7 @@ class TestLoss:
         model = TestModel()
         divergence = compute_distributional_distance(dataset, model, 1)
 
-        assert divergence == pytest.approx(representation_dimension*distribution_offset**2, rel=0.15)
+        assert divergence == pytest.approx(representation_dimension*distribution_offset**2, rel=0.1)
 
 
 class TestModel(CATEModel):
