@@ -12,7 +12,7 @@ import numpy as np
 
 def candidatePredictorTau(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], Xtest: th.tensor, algo, learner) -> th.Tensor:
     if learner == SLearner or learner == XLearner or learner == TLearner:
-        est = SLearner(overall_model=algo)
+        est = learner(overall_model=algo)
     elif learner == DomainAdaptationLearner:
         est = learner(models=algo, final_models=algo)
     elif learner == DRLearner:
