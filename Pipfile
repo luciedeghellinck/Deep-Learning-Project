@@ -13,6 +13,7 @@ tqdm = "*"
 pandas = "*"
 jupyter = "*"
 scipy = "*"
+sklearn = "*"
 
 [dev-packages]
 pytest = "*"

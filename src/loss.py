@@ -3,7 +3,10 @@ import torch.nn as nn
 from typing import Tuple
 from src.model import CATEModel
 from scipy.stats import wasserstein_distance
+
+
 # from src.propensity_score import propensityRegression
+from src.propensity_score import propensityRegression
 
 
 class SinkhornDistance(nn.Module):
@@ -139,9 +142,8 @@ def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
       The float weight for the feature vector and the treatment type.
     """
     ## TO BE UNCOMMENTED WHEN THE REGRESSION IS MADE
-    # regression = propensityRegression(dataset)
-    # propensity = regression.forward(dataset[0])
-    propensity = 0.5
+    regression = propensityRegression(dataset)
+    propensity = regression.forward(dataset[0]).squeeze(-1)
     # assert len(propensity.size()) == len(dataset[0].size()) and propensity.size()[-1] == 1
 
     return (dataset[1] * (1 - 2 * propensity) + propensity ** 2) / (propensity * (1 - propensity))
@@ -199,13 +201,26 @@ def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, a
     Returns:
       float loss as defined in equation 12
     """
+    empirical_weighted_risk = compute_empirical_weighted_risk(dataset, model)
+    distributional_distance = compute_distributional_distance(dataset, model, alpha)
+    total_loss = empirical_weighted_risk + distributional_distance
+
+    return total_loss
+
+
+def compute_empirical_weighted_risk(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel):
     adapted_weights = adaptedWeight(dataset)
     mseLoss = th.nn.MSELoss(reduction='none')
     # l is a tensor with n elements (n being the number of people in the dataset)
-    l = mseLoss(th.squeeze(model.get_hypothesis(dataset[0], dataset[1])), dataset[2])  # The first term gives the hypothesis using X (dataset[0]) using the value of T (dataset[1]), the MSE loss is calculated by comparing f(t=0)/f(t=1) with the observed Y (dataset[2]),
-    empirical_weighted_risk = th.dot(adapted_weights, l) / dataset[0].size()[0]
+    l = mseLoss(th.squeeze(model.get_hypothesis(dataset[0], dataset[1])), dataset[2])
+    # The first term gives the hypothesis using X (dataset[0]) using the value of T (dataset[1]),
+    # the MSE loss is calculated by comparing f(t=0)/f(t=1) with the observed Y (dataset[2]),
 
-    sinkhorn = SinkhornDistance(100, 1000)
+    return th.dot(adapted_weights, l) / dataset[0].size()[0]
+
+
+def compute_distributional_distance(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, alpha: float):
+    sinkhorn = SinkhornDistance(0.05, 100)
     indices_not_treated = th.nonzero(dataset[1] == 0)
     indices_treated = th.nonzero(dataset[1] == 1)
 
@@ -215,9 +230,4 @@ def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, a
     representation_no_treatment = model.get_representation(x_not_treated)
     representation_treatment = model.get_representation(x_treated)
     cost, pi, C = sinkhorn.forward(representation_no_treatment, representation_treatment)
-    distributional_distance = alpha * th.sum(cost)
-
-    total_loss = empirical_weighted_risk + distributional_distance
-    print(total_loss)
-
-    return total_loss
+    return alpha * th.sum(cost)
