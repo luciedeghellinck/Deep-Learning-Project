@@ -38,10 +38,6 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
         loss.backward()
         optimizer.step()
 
-    #  propensity score
-    with torch.no_grad():
-        prop = model(X)  # .mean().item()
-
-    return prop
+    return model
 
 
