@@ -28,15 +28,24 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     )
 
     criterion = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.2)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.5)
 
     # Train model to predict T given X
-    for epoch in range(150):
+    current_patience = 0
+    patience = 5
+    lowest_loss = float('inf')
+    while current_patience < patience:
         optimizer.zero_grad()
         t_pred = model(X).squeeze(-1)
         loss = criterion(t_pred, T.float())
         loss.backward()
         optimizer.step()
+
+        if loss >= lowest_loss:
+            current_patience += 1
+        else:
+            current_patience = 0
+            lowest_loss = loss
 
     return model
 
