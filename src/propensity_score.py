@@ -33,8 +33,8 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     # Train model to predict T given X
     for epoch in range(100):
         optimizer.zero_grad()
-        y_pred = model(X)
-        loss = criterion(y_pred, T)
+        y_pred = model(X).squeeze(-1)
+        loss = criterion(y_pred, T.float())
         loss.backward()
         optimizer.step()
 
