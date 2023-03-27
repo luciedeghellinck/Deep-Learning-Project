@@ -50,5 +50,3 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
             lowest_loss = loss
 
     return model
-
-
