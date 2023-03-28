@@ -1,9 +1,8 @@
 import torch as th
-import torch.nn as nn
 from scipy.stats import spearmanr
 
 
-def Rtrue(tauHat: th.Tensor, tauTilde: th.Tensor) -> th.Tensor:
+def Rtrue(tauHat: th.Tensor, tauTilde: th.Tensor) -> float:
     """
     Calculates the performance metric R_true as defined in Equation 1
 
@@ -15,11 +14,10 @@ def Rtrue(tauHat: th.Tensor, tauTilde: th.Tensor) -> th.Tensor:
     """
     squared_error = (tauHat - tauTilde) ** 2
     expected = th.mean(squared_error)
+    return expected.item()
 
-    return expected
 
-
-def regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor):
+def regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor) -> float:
     """
     Calculates the regret: the difference between the true performance of the selected model and that of the best
     possible candidate in M
@@ -27,6 +25,7 @@ def regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor
     Args:
         tauHatSelected: 1D tensor of size n containing the best CATE prediction calculated using the validation set
         tauHatBest: 1D tensor of size n containing the best CATE prediction calculated using the test set
+        tauTilde: 1D tensor of size n containing the best CATE prediction calculated using the neural network
     Returns:
         The regret between the two CATE predictors
     """
@@ -34,7 +33,7 @@ def regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor
     return (Rtrue(tauHatSelected, tauTilde) - Rtrue(tauHatBest, tauTilde)) / Rtrue(tauHatBest, tauTilde)
 
 
-def rankCorrelation(tauHatSelected: th.Tensor, tauHatBest: th.Tensor):
+def rankCorrelation(tauHatSelected: th.Tensor, tauHatBest: th.Tensor) -> float:
     """
     Calculates the Spearman Rank Correlation
 
@@ -45,10 +44,25 @@ def rankCorrelation(tauHatSelected: th.Tensor, tauHatBest: th.Tensor):
         The Spearman Rank Correlation between the two CATE predictors
     """
     correlation = spearmanr(tauHatSelected, tauHatBest)
-    return correlation.pvalue()
+    return float(correlation.pvalue)
 
 
-def NRMSE(tauHatSelected: th.Tensor, tauHatBest: th.Tensor):
+def NRMSE(tauHatSelected: th.Tensor, tauHatBest: th.Tensor) -> float:
+    """
+    Calculates the normalised root mean sqaured error between the CATE predictors
+
+    Args:
+        tauHatSelected: 1D tensor of size n containing the best CATE prediction calculated using the validation set
+        tauHatBest: 1D tensor of size n containing the best CATE prediction calculated using the test set
+    Returns:
+        The NRMSE between the two CATE predictors
+    """
+    squared_error = (tauHatSelected - tauHatBest) ** 2
+    average_error = th.mean(squared_error)
+    variance = th.var(tauHatBest)
+    nrmse = th.sqrt(average_error / variance)
+
+    return nrmse.item()
 
 
     # """

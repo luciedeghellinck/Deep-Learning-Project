@@ -22,7 +22,7 @@ class TestLoss:
         dataset = (x, t, y)
         pi_0 = pi(dataset, 0)
 
-        assert pi_0.size() == ()
+        assert type(pi_0.item()) == float
 
     def test_adaptedWeight(self):
         x = th.rand(64, 25)

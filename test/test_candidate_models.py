@@ -2,7 +2,6 @@ from src.candidate_models import candidatePredictorTau
 import torch as th
 from econml.metalearners import SLearner, XLearner, TLearner, DomainAdaptationLearner
 from econml.dr import DRLearner
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import Ridge

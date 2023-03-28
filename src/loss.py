@@ -2,10 +2,7 @@ import torch as th
 import torch.nn as nn
 from typing import Tuple
 from src.model import CATEModel
-from scipy.stats import wasserstein_distance
 
-
-# from src.propensity_score import propensityRegression
 from src.propensity_score import propensityRegression
 
 
@@ -144,7 +141,6 @@ def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
     ## TO BE UNCOMMENTED WHEN THE REGRESSION IS MADE
     regression = propensityRegression(dataset)
     propensity = regression.forward(dataset[0]).squeeze(-1)
-    # assert len(propensity.size()) == len(dataset[0].size()) and propensity.size()[-1] == 1
 
     return (dataset[1] * (1 - 2 * propensity) + propensity ** 2) / (propensity * (1 - propensity))
 
