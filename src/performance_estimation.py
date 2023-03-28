@@ -1,20 +1,42 @@
+from typing import Tuple
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import train_test_split
+
 import torch as th
 
-def plugInTau(x, t, y, f0, f1, regression):
-    """
-    Calculates the plug in tau for the feature vector.
 
-    Args:
-      x: m dimensional float feature vector.
-      t: 0/1 treatment type.
-      y: float outcome.
-      f0: hypothesis function evaluated at the feature vector when there is no treatment.
-      f1: hypothesis function evaluated at the feature vector when there is a treatment.
-      regression: regression function for the propensity.
+def IPW(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], propensity_regressor: th.nn.Module, tau):
+    X, T, Y = dataset
+    propensity_scores = propensity_regressor.forward(X)
 
-    Returns:
-      A float representing the plug-in predictor for the datapoint [X,T,Y] given the hypotheses functions f0 and f1 as well as the propensity regression function.
-    """
+    plug_in_value = T / propensity_scores * Y - (((1 - T) / (1 - propensity_scores)) * Y)
+
+    return th.nn.MSELoss(plug_in_value, tau.predict(X), reduction="mean")
+
+def tau_risk(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor],
+             propensity_regressor: th.nn.Module,
+             outcome_regressor: GradientBoostingRegressor,
+             tau):
+    X, T, Y = dataset
+
+    propensity_scores = propensity_regressor.forward(X)
+    expected_outcome = outcome_regressor.predict(X)
+
+    plug_in_value = 1 / len(T) * th.sum((Y - expected_outcome) - (T - propensity_scores))
+
+    return th.nn.MSELoss(plug_in_value, tau.predict(X), reduction="mean")
+
+
+
+def outcome_regressor(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]):
+    X, _, Y = dataset
+
+    reg = GradientBoostingRegressor()
+    reg.fit(X, Y)
+    return reg
+
+
+
 
 
 def candidatePredictorTau(x, MLAlgorithm, metalearner):

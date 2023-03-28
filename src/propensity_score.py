@@ -1,7 +1,8 @@
+from functools import cache
 from typing import Tuple
 import torch
 
-
+@cache
 def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
     """
     Evaluates a regression function for the propensity given the known propensity scores
