@@ -17,7 +17,7 @@ def Rtrue(tauHat: th.Tensor, tauTilde: th.Tensor) -> float:
     return expected.item()
 
 
-def regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor) -> float:
+def Regret(tauHatSelected: th.Tensor, tauHatBest: th.Tensor, tauTilde: th.Tensor) -> float:
     """
     Calculates the regret: the difference between the true performance of the selected model and that of the best
     possible candidate in M
