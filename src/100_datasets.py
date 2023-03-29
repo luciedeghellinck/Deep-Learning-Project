@@ -31,16 +31,17 @@ test_ratio = 0.30
 MLAlgorithms = [DecisionTreeRegressor(), RandomForestRegressor(), GradientBoostingRegressor(), Ridge(), SVR()]
 metaLearners = [SLearner, XLearner, TLearner, DomainAdaptationLearner, DRLearner]
 
-#CHECK WHAT TO DO WITH THE TWO DATA FILES
+# CHECK WHAT TO DO WITH THE TWO DATA FILES
 dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz")
 realisation_number = dataset.X.size()[0]  # 100 for this dataset
-input_size = dataset.X.size()[1]
+input_size = dataset.X.size()[1]  # 75 for this dataset
 
 model = CATEModel(input_size, n_hidden_layers, dim_hidden_layers, 1, alpha, dropout_rate)
 optimizer = Adam(model.parameters(), lr=learning_rate)
 criterion = loss
 
-metrics = th.empty(3, 4, realisation_number) # dim=0: metric (Correlation, regret, NRMSE); dim=1: Methods (IPW, TauRisk, PlugIn, CFCV); dim=2: realisations
+metrics = th.empty(4, 3, realisation_number)  # dim=0: Methods (IPW, TauRisk, PlugIn, CFCV); dim=1: metric (Correlation, regret, NRMSE); dim=2: realisations
+table1 = th.empty(4, 3, 3)  # dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case
 
 for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     x_train, x_test, t_train, t_test, y_train, y_test = train_test_split(X.clone().detach(), T.clone().detach(),
@@ -58,8 +59,8 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     tauTildeVal = th.empty(len(y_val))
 
     ## TauHat and comparison
-    bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn = float('inf'), float('inf'), float('inf'), float('inf')
-    tauSelectedCFCV, tauSelectedIPW, tauSelectedTauRisk, tauSelectedPlugIn = th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val))
+    bestPerformance = [float('inf'), float('inf'), float('inf'), float('inf')]  # bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
+    tauSelected = [th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val))]  # tauSelectedCFCV, tauSelectedIPW, tauSelectedTauRisk, tauSelectedPlugIn
     for algo in MLAlgorithms:
         for learner in metaLearners:
             tauHat = candidatePredictorTau((x_train, t_train, y_train), x_val, algo, learner)
@@ -68,26 +69,26 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
             performanceIPW = IPW((x_train, t_train, y_train), propensityRegression, tauHat)
             performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression, tauHat)
             performancePlugIn = outcome_regressor((x_train, t_train, y_train))
-            if performanceCFCV < bestPerformanceCFCV:
-                bestPerformanceCFCV = performanceCFCV
-                tauSelectedCFCV = tauHat
-            if performanceIPW < bestPerformanceIPW:
-                bestPerformanceIPW = performanceIPW
-                tauSelectedIPW = tauHat
-            if performanceTauRisk < bestPerformanceTauRisk:
-                bestPerformanceTauRisk = performanceTauRisk
-                tauSelectedTauRisk = tauHat
-            if performancePlugIn < bestPerformancePlugIn:
-                bestPerformancePlugIn = performancePlugIn
-                tauSelectedPlugIn = tauHat
+            if performanceCFCV < bestPerformance[0]:
+                bestPerformance[0] = performanceCFCV
+                tauSelected[0] = tauHat
+            if performanceIPW < bestPerformance[1]:
+                bestPerformance[1] = performanceIPW
+                tauSelected[1] = tauHat
+            if performanceTauRisk < bestPerformance[2]:
+                bestPerformance[2] = performanceTauRisk
+                tauSelected[2] = tauHat
+            if performancePlugIn < bestPerformance[3]:
+                bestPerformance[3] = performancePlugIn
+                tauSelected[3] = tauHat
 
     # TEST SET
     ## TauTilde (apply the neural network obtained in the training set to the validation set feature vectors)
     tauTildeTest = th.empty(len(y_test))
 
     ## TauHat and comparison
-    bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn = float('inf'), float('inf'), float('inf'), float('inf')
-    tauBestCFCV, tauBestIPW, tauBestTauRisk, tauBestPlugIn = th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val))
+    bestPerformance = [float('inf'), float('inf'), float('inf'), float('inf')]  #bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
+    tauBest = [th.empty(len(y_test)), th.empty(len(y_test)), th.empty(len(y_test)), th.empty(len(y_test))]  #tauBestCFCV, tauBestIPW, tauBestTauRisk, tauBestPlugIn
     for algo in MLAlgorithms:
         for learner in metaLearners:
             tauHat = candidatePredictorTau((x_train, t_train, y_train), x_test, algo, learner)
@@ -96,42 +97,33 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
             performanceIPW = IPW((x_train, t_train, y_train), propensityRegression, tauHat)
             performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression, tauHat)
             performancePlugIn = outcome_regressor((x_train, t_train, y_train))
-            if performanceCFCV < bestPerformanceCFCV:
-                bestPerformanceCFCV = performanceCFCV
-                tauBestCFCV = tauHat
-            if performanceIPW < bestPerformanceIPW:
-                bestPerformanceIPW = performanceIPW
-                tauBestIPW = tauHat
-            if performanceTauRisk < bestPerformanceTauRisk:
-                bestPerformanceTauRisk = performanceTauRisk
-                tauBestTauRisk = tauHat
-            if performancePlugIn < bestPerformancePlugIn:
-                bestPerformancePlugIn = performancePlugIn
-                tauBestPlugIn = tauHat
+            if performanceCFCV < bestPerformance[0]:
+                bestPerformance[0] = performanceCFCV
+                tauBest[0] = tauHat
+            if performanceIPW < bestPerformance[1]:
+                bestPerformance[1] = performanceIPW
+                tauBest[1] = tauHat
+            if performanceTauRisk < bestPerformance[2]:
+                bestPerformance[2] = performanceTauRisk
+                tauBest[2] = tauHat
+            if performancePlugIn < bestPerformance[3]:
+                bestPerformance[3] = performancePlugIn
+                tauBest[3] = tauHat
     ## Evaluate the metrics
     # TAUSELECTED AND TAUBEST DO NOT HAVE THE SAME SIZE SINCE THERE IS A DIFFERENT NUMBER OF INPUT DATA --> HOW ARE WE MEANT TO COMPARE THEM... SINCE THE FEATURES ARE DIFFERENT, IT DOESNT MAKE SENSE
-    metrics[0][0][i] = rankCorrelation(tauSelectedIPW, tauBestIPW)
-    metrics[0][1][i] = rankCorrelation(tauSelectedTauRisk, tauBestTauRisk)
-    metrics[0][2][i] = rankCorrelation(tauSelectedPlugIn, tauBestPlugIn)
-    metrics[0][3][i] = rankCorrelation(tauSelectedCFCV, tauBestCFCV)
 
-    metrics[1][0][i] = Regret(tauSelectedIPW, tauBestIPW, tauTildeTest)
-    metrics[1][1][i] = Regret(tauSelectedTauRisk, tauBestTauRisk, tauTildeTest)
-    metrics[1][2][i] = Regret(tauSelectedPlugIn, tauBestPlugIn, tauTildeTest)
-    metrics[1][3][i] = Regret(tauSelectedCFCV, tauBestCFCV, tauTildeTest)
+    # metrics: dim=0: Methods (IPW, TauRisk, PlugIn, CFCV); dim=1: metric (Correlation, regret, NRMSE); dim=2: realisations
+    for method in range(4):
+        metrics[method][0][i] = rankCorrelation(tauSelected[method], tauBest[method])
+        metrics[method][1][i] = Regret(tauSelected[method], tauBest[method], tauTildeTest)
+        metrics[method][2][i] = NRMSE(tauSelected[method], tauBest[method])
 
-    metrics[2][0][i] = NRMSE(tauSelectedIPW, tauBestIPW)
-    metrics[2][1][i] = NRMSE(tauSelectedTauRisk, tauBestTauRisk)
-    metrics[2][2][i] = NRMSE(tauSelectedPlugIn, tauBestPlugIn)
-    metrics[2][3][i] = NRMSE(tauSelectedCFCV, tauBestCFCV)
-
-table1 = th.empty(4, 3, 3)  # dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case
-
+# table1: dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case
 for method in range(4):
     for metric in range(3):
-        table1[method][metric][0] = th.mean(metrics[metric][method])
-        table1[method][metric][1] = th.std(metrics[metric][method])
+        table1[method][metric][0] = th.mean(metrics[method][metric])
+        table1[method][metric][1] = th.std(metrics[method][metric])
         if method == 0:
-            table1[method][metric][2] = th.min(metrics[metric][method])
+            table1[method][metric][2] = th.min(metrics[method][metric])
         else:
-            table1[method][metric][2] = th.max(metrics[metric][method])
+            table1[method][metric][2] = th.max(metrics[method][metric])
