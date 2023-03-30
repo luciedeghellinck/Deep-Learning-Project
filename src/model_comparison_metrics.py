@@ -1,6 +1,23 @@
 import torch as th
 from scipy.stats import spearmanr
 
+def tau_ground_truth(dataset: th.Tensor)
+    """
+    
+    Args:
+        dataset: load the dataset that contains counter factual outcome
+
+    Returns:
+        ground truth tau 
+
+    """
+    t = dataset.T
+    y_f = dataset.Y_f
+    y_cf = dataset.Y_cf
+    tau_truth = th.multiply((t == 1), (y_f - y_cf)) + th.multiply((t == 0), (y_cf - y_f))
+    return tau_truth.item()
+
+
 
 def Rtrue(tauHat: th.Tensor, tauTilde: th.Tensor) -> float:
     """
