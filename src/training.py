@@ -1,3 +1,5 @@
+from collections import Callable
+
 import torch as th
 from torch.utils.data import DataLoader
 
@@ -7,25 +9,17 @@ def fit(train_loader: DataLoader,
         model: th.nn.Module,
         optimizer: th.optim.Optimizer,
         criterion: th.nn.Module,
-        early_stopping_patience: int):
-    min_val_loss = float('inf')
-    patience_count = 0
-    while patience_count < early_stopping_patience:
-        train_loss, accuracy = train(train_loader,
+        epochs: int):
+    for _ in range(epochs):
+        train_loss = train(train_loader,
                                      model,
                                      optimizer,
                                      criterion)
-        print(f"train accuracy: {accuracy}")
         print(f"train loss: {train_loss}")
-        val_loss, accuracy = test(test_loader,
+        val_loss = test(test_loader,
                                   model,
                                   criterion)
-        print(f"val accuracy: {accuracy}")
         print(f"val loss: {val_loss}")
-        if val_loss > min_val_loss:
-            early_stopping_patience += 1
-
-        min_val_loss = min(min_val_loss, val_loss)
 
 
 # Copy and paste from the assignements --> check this
@@ -48,24 +42,17 @@ def train(train_loader, model, optimizer, criterion):
     # iterate through batches
     for i, data in enumerate(train_loader):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data
-
         # zero the parameter gradients
         optimizer.zero_grad()
-
-        # forward + backward + optimize
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        loss = criterion(data, model)
         loss.backward()
         optimizer.step()
 
         # keep track of loss and accuracy
         avg_loss += loss
-        _, predicted = th.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
+        total += data[0].size(0)
 
-    return avg_loss / len(train_loader), 100 * correct / total
+    return avg_loss
 
 
 def test(test_loader, model, criterion):
@@ -79,24 +66,16 @@ def test(test_loader, model, criterion):
     """
     model.eval()
     avg_loss = 0
-    correct = 0
     total = 0
 
-    # Use torch.no_grad to skip gradient calculation, not needed for evaluation
-    with th.no_grad():
-        # iterate through batches
-        for data in test_loader:
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
+    # iterate through batches
+    for data in test_loader:
+        # zero the parameter gradients
+        loss = criterion(data, model)
+        loss.backward()
 
-            # forward pass
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
+        # keep track of loss and accuracy
+        avg_loss += loss
+        total += data[0].size(0)
 
-            # keep track of loss and accuracy
-            avg_loss += loss
-            _, predicted = th.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    return avg_loss / len(test_loader), 100 * correct / total
+    return avg_loss

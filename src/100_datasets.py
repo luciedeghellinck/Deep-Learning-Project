@@ -11,7 +11,7 @@ from sklearn.svm import SVR
 
 from src.data import ihdpDataset
 from src.model import CATEModel
-from src.loss import loss
+from src.loss import loss, Loss
 from src.training import fit, train, test
 from src.candidate_models import candidatePredictorTau
 from src.performance_estimation import performanceEstimator, IPW, tau_risk, outcome_regressor
@@ -34,9 +34,9 @@ metaLearners = [SLearner, XLearner, TLearner, DomainAdaptationLearner, DRLearner
 # CHECK WHAT TO DO WITH THE TWO DATA FILES
 dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz")
 realisation_number = dataset.X.size()[0]  # 100 for this dataset
-input_size = dataset.X.size()[1]  # 75 for this dataset
+input_size = 25  # 25 for this dataset
 
-model = CATEModel(input_size, n_hidden_layers, dim_hidden_layers, 1, alpha, dropout_rate)
+model = CATEModel(25, n_hidden_layers, dim_hidden_layers, 1, alpha, dropout_rate)
 optimizer = Adam(model.parameters(), lr=learning_rate)
 criterion = loss
 
@@ -52,11 +52,15 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     datasetTrain = x_train, t_train, y_train
     loader = DataLoader(TensorDataset(*datasetTrain), batch_size=batch_size)
 
+    testLoader = DataLoader(TensorDataset(x_val, t_val, y_val), batch_size=batch_size)
+    regressor = propensityRegression(datasetTrain)
+    loss = Loss(regressor, alpha)
     # TRAINING SET
 
     # VALIDATION SET
     ## TauTilde (apply the neural network obtained in the training set to the validation set feature vectors)
-    tauTildeVal = th.empty(len(y_val))
+    fit(loader, testLoader, model, optimizer, loss, 100)
+    tauTildeVal = model.forward(x_val)
 
     ## TauHat and comparison
     bestPerformance = [float('inf'), float('inf'), float('inf'), float('inf')]  # bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
@@ -66,8 +70,8 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
             tauHat = candidatePredictorTau((x_train, t_train, y_train), x_val, algo, learner)
             ## CHECK THE ARGUMENTS
             performanceCFCV = performanceEstimator(tauTildeVal, tauHat)
-            performanceIPW = IPW((x_train, t_train, y_train), propensityRegression, tauHat)
-            performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression, tauHat)
+            performanceIPW = IPW((x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat)
+            performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat)
             performancePlugIn = outcome_regressor((x_train, t_train, y_train))
             if performanceCFCV < bestPerformance[0]:
                 bestPerformance[0] = performanceCFCV

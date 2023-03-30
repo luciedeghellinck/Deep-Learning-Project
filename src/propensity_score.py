@@ -1,9 +1,8 @@
-from functools import cache
+from functools import lru_cache
 from typing import Tuple
 import torch
 
-@cache
-def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
+def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor], validation: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
     """
     Evaluates a regression function for the propensity given the known propensity scores
 
@@ -30,7 +29,7 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     )
 
     criterion = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # Train model to predict T given X
     current_patience = 0
@@ -42,6 +41,8 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
         loss = criterion(t_pred, T.float())
         loss.backward()
         optimizer.step()
+
+        validation_loss = criterion
 
         if loss >= lowest_loss:
             current_patience += 1

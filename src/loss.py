@@ -125,7 +125,7 @@ class SinkhornDistance(nn.Module):
 #     return th.Tensor([ipm])
 
 
-def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
+def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], regressor: th.nn.Module) -> th.Tensor:
     """
     Calculates the weight for a given feature vector and a given treatment type.
 
@@ -139,9 +139,7 @@ def weight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]) -> th.Tensor:
       The float weight for the feature vector and the treatment type.
     """
     ## TO BE UNCOMMENTED WHEN THE REGRESSION IS MADE
-    regression = propensityRegression(dataset)
-    propensity = regression.forward(dataset[0]).squeeze(-1)
-
+    propensity = regressor.forward(dataset[0]).squeeze(-1) + 1E-7
     return (dataset[1] * (1 - 2 * propensity) + propensity ** 2) / (propensity * (1 - propensity))
 
 
@@ -161,7 +159,7 @@ def pi(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], t: int) -> th.Tensor:
     return th.sum(dataset[1] == t) / dataset[1].size()[0]
 
 
-def adaptedWeight(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor]) -> th.Tensor:
+def adaptedWeight(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], regressor: th.nn.Module) -> th.Tensor:
     """
     Calculates the weight for a given feature vector and a given treatment type.
 
@@ -174,16 +172,30 @@ def adaptedWeight(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor]) -> th.Tensor:
     Returns:
       The float adapted weight for the feature vector and the treatment type.
     """
-    old_weight = weight(dataset)
+    old_weight = weight(dataset, regressor)
+    print(f"old_weight: {old_weight}")
     pi_0 = pi(dataset, 0)
     pi_1 = pi(dataset, 1)
-
+    print(f"pi_0: {pi_0}")
+    print(f"pi_1: {pi_1}")
     adapted_weight = th.mul(old_weight, 1 / 2 * (dataset[1] / pi_1 + (1 - dataset[1]) / pi_0))
 
     return adapted_weight
 
 
-def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, alpha: float) -> th.Tensor:
+class Loss(th.nn.Module):
+
+    def __init__(self, regressor: th.nn.Module, alpha: float):
+        super().__init__()
+        self.regressor = regressor
+        self.alpha = alpha
+
+    def forward(self, dataset, model):
+        return loss(dataset, model, self.alpha, self.regressor)
+
+
+def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, alpha: float,
+         regressor: th.nn.Module) -> th.Tensor:
     """
     Calculates the new loss function as defined in equation 12
 
@@ -197,26 +209,31 @@ def loss(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, a
     Returns:
       float loss as defined in equation 12
     """
-    empirical_weighted_risk = compute_empirical_weighted_risk(dataset, model)
+    empirical_weighted_risk = compute_empirical_weighted_risk(dataset, model, regressor)
+    print(f"weighted risk: {empirical_weighted_risk}")
     distributional_distance = compute_distributional_distance(dataset, model, alpha)
+    print(f"distributional_distance: {distributional_distance}")
     total_loss = empirical_weighted_risk + distributional_distance
-
+    print(f"total_loss: {total_loss}")
     return total_loss
 
 
-def compute_empirical_weighted_risk(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel):
-    adapted_weights = adaptedWeight(dataset)
+def compute_empirical_weighted_risk(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel,
+                                    regressor: th.nn.Module):
+    adapted_weights = adaptedWeight(dataset, regressor)
+    print(f"adapted_weights: {adapted_weights}")
     mseLoss = th.nn.MSELoss(reduction='none')
     # l is a tensor with n elements (n being the number of people in the dataset)
     l = mseLoss(th.squeeze(model.get_hypothesis(dataset[0], dataset[1])), dataset[2])
+    print(f"loss: {l}")
     # The first term gives the hypothesis using X (dataset[0]) using the value of T (dataset[1]),
     # the MSE loss is calculated by comparing f(t=0)/f(t=1) with the observed Y (dataset[2]),
-
-    return th.dot(adapted_weights, l) / dataset[0].size()[0]
+    print(dataset[0].size(0))
+    return th.dot(adapted_weights, l) / dataset[0].size(0)
 
 
 def compute_distributional_distance(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], model: CATEModel, alpha: float):
-    sinkhorn = SinkhornDistance(0.05, 100)
+    sinkhorn = SinkhornDistance(0.05, 50)
     indices_not_treated = th.nonzero(dataset[1] == 0)
     indices_treated = th.nonzero(dataset[1] == 1)
 
