@@ -64,12 +64,10 @@ def test(test_loader, model, criterion):
     model.eval()
     avg_loss = 0
     total = 0
-
     # iterate through batches
     for data in test_loader:
         # zero the parameter gradients
         loss = criterion(data, model)
-        loss.backward()
 
         # keep track of loss and accuracy
         avg_loss += loss

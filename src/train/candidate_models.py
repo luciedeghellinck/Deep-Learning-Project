@@ -42,7 +42,7 @@ class ModelFactory:
         models = []
         for learner in self.learners:
             for algorithm in self.algorithms:
-                model = self.candidatePredictorTau(dataset, algorithm, learner)
+                model = self.candidatePredictorTau(dataset, algorithm(), learner)
                 models.append(model)
 
         return models
@@ -50,6 +50,7 @@ class ModelFactory:
     def candidatePredictorTau(
         self, dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], algo, learner
     ) -> RegressorMixin:
+        X, T, Y = dataset
         if learner == SLearner:
             est = learner(overall_model=algo)
         elif learner == XLearner or learner == TLearner:
@@ -60,8 +61,7 @@ class ModelFactory:
             est = learner(model_regression=algo)
         else:
             raise Exception("This meta learner is not accepted")
-
-        est.fit(dataset[2].numpy(), dataset[1].numpy(), X=dataset[0].numpy())
+        est.fit(Y=Y, T=T, X=X)
         return est
 
 

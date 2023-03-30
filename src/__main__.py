@@ -30,10 +30,10 @@ def create_selection_methods(dataset_train, dataset_validate):
     return selection_methods
 
 
-def create_measurements(selection_method, test_data, ground_truth_cate):
-    regret = Regret(selection_method, test_data, ground_truth_cate)
-    nrmse = NRMSE(selection_method, test_data, ground_truth_cate)
-    rank_correlation = RankCorrelation(selection_method, test_data, ground_truth_cate)
+def create_measurements(selection_method, test_data):
+    regret = Regret(selection_method, test_data)
+    nrmse = NRMSE(selection_method, test_data)
+    rank_correlation = RankCorrelation(selection_method, test_data)
     return {
         "regret": regret.get_measure(),
         "nrmse": nrmse.get_measure(),
@@ -42,18 +42,18 @@ def create_measurements(selection_method, test_data, ground_truth_cate):
 
 
 def main():
-    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz", (35, 35, 30))
+    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz", (0.35, 0.35, 0.30))
     data = []
-    for ground_truth_cate, dataset_train, dataset_validate, dataset_test in dataset:
+    for dataset_train, dataset_validate, dataset_test in dataset:
         selection_methods: Dict[str, SelectionMetric] = create_selection_methods(
             dataset_train, dataset_validate
         )
         data.append(
             {
                 key: create_measurements(
-                    selection_method, dataset_test, ground_truth_cate
+                    selection_method, dataset_test
                 )
-                for key, selection_method in selection_methods
+                for key, selection_method in selection_methods.items()
             }
         )
     with open("./measurement_output.json", "w") as f:

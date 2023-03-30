@@ -16,6 +16,7 @@ scipy = "*"
 sklearn = "*"
 scikit-learn = "*"
 black = "*"
+numpy = "==1.23.5"
 
 [dev-packages]
 pytest = "*"

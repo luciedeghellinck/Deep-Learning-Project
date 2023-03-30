@@ -200,18 +200,18 @@ class Loss(th.nn.Module):
         model: CATEModel,
         alpha: float,
     ):
-        sinkhorn = SinkhornDistance(
-            self.sinkhorn_generalization, self.sinkhorn_iterations
-        )
-        indices_not_treated = th.nonzero(dataset[1] == 0)
-        indices_treated = th.nonzero(dataset[1] == 1)
+        # I don't know why but without these calls everything breaks.
+        print(dataset[1].size())
+        print(dataset[0].size())
+        indices_not_treated = th.nonzero(dataset[1].int() == 0)
+        indices_treated = th.nonzero(dataset[1].int() == 1)
 
         x_not_treated = dataset[0][indices_not_treated].squeeze(dim=1)
         x_treated = dataset[0][indices_treated].squeeze(dim=1)
 
         representation_no_treatment = model.get_representation(x_not_treated)
         representation_treatment = model.get_representation(x_treated)
-        cost, pi, C = sinkhorn.forward(
+        cost, pi, C = self.sinkhorn.forward(
             representation_no_treatment, representation_treatment
         )
         return alpha * th.sum(cost)
@@ -266,7 +266,6 @@ class Loss(th.nn.Module):
           The float adapted weight for the feature vector and the treatment type.
         """
         old_weight = self.weight(dataset)
-        print(f"old_weight: {old_weight}")
         adapted_weight = th.mul(
             old_weight, 1 / 2 * (dataset[1] / self.pi_1 + (1 - dataset[1]) / self.pi_0)
         )

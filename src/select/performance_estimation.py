@@ -14,10 +14,12 @@ class SelectionMetric(ABC):
         self.rating = None
 
     def get_best_model(self):
+        self.rate_models()
         best = th.argmin(self.rating)
         return self.models[best.item()]
 
     def get_model_ranking(self):
+        self.rate_models()
         sorted_indices = th.argsort(self.rating)
         ranking = th.Tensor(
             [
@@ -29,11 +31,11 @@ class SelectionMetric(ABC):
 
     def rate_models(self):
         if self.rating is None:
-            self.__create_rating()
+            self.create_rating()
         return self.rating
 
     @abc.abstractmethod
-    def __create_rating(self):
+    def create_rating(self):
         pass
 
 
@@ -43,7 +45,7 @@ class IPW(SelectionMetric):
         self.dataset = validation_dataset
         self.regressor = propensity_regressor
 
-    def __create_rating(self):
+    def create_rating(self):
         self.rating = []
         for tau in self.models:
             self.rating.append(self.IPW(tau))
@@ -70,7 +72,7 @@ class TauRisk(SelectionMetric):
         self.regressor = propensity_regressor
         self.outcome_reg = self.outcome_regressor(train_dataset)
 
-    def __create_rating(self):
+    def create_rating(self):
         self.rating = []
         for tau in self.models:
             self.rating.append(self.tau_risk(tau))
@@ -106,7 +108,7 @@ class CounterfactualCrossValidation(SelectionMetric):
         self.cate_model = cate_model
         self.dataset = validation_dataset
 
-    def __create_rating(self):
+    def create_rating(self):
         self.rating = []
         for tau in self.models:
             self.rating.append(self.counter_factual_cross_validation(tau))

@@ -10,14 +10,14 @@ from src.select.performance_estimation import SelectionMetric
 
 class Measurement(SelectionMetric, ABC):
     def __init__(
-        self, selection_method: SelectionMetric, test_dataset, test_tau_values
+        self, selection_method: SelectionMetric, test_dataset
     ):
         super().__init__(selection_method.models)
         self.selection_method = selection_method
-        self.dataset = test_dataset
-        self.test_tau_values = test_tau_values
+        self.dataset = test_dataset[:-1]
+        self.test_tau_values = test_dataset[-1]
 
-    def __create_rating(self):
+    def create_rating(self):
         self.rating = []
         for tau in self.models:
             self.rating.append(self.r_true(tau))
