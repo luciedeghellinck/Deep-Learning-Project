@@ -27,13 +27,28 @@ def tau_risk(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor],
 
     return th.nn.MSELoss(plug_in_value, tau.predict(X), reduction="mean")
 
-
 def outcome_regressor(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]):
     X, _, Y = dataset
 
     reg = GradientBoostingRegressor()
     reg.fit(X, Y)
     return reg
+
+
+def plug_in_validation(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], tau)
+    """
+    Args:
+        dataset: load the dataset that contains mu1, mu0
+        tau:  candidate tau models
+
+    Returns:
+            plug_in_validation R
+    """
+    x = dataset.X
+    tau1 = dataset.mu1
+    tau0 = dataset.mu0
+    return th.nn.MSELoss ((tau1-tau0) , tau.predict(x) , reduction="mean")
+
 
 def performanceEstimator(plugIn, candidate):
     """
