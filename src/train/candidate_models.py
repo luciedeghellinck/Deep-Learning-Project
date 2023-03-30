@@ -1,10 +1,11 @@
-from econml.metalearners import SLearner, XLearner, TLearner, DomainAdaptationLearner
-from econml.dr import DRLearner
-import torch as th
-from typing import Tuple, List
+from typing import List, Tuple
 
+import torch as th
+from econml.dr import DRLearner
+from econml.metalearners import (DomainAdaptationLearner, SLearner, TLearner,
+                                 XLearner)
 from sklearn.base import RegressorMixin
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor

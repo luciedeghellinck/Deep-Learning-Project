@@ -1,11 +1,13 @@
-from src.train.candidate_models import candidatePredictorTau
 import torch as th
-from econml.metalearners import SLearner, XLearner, TLearner, DomainAdaptationLearner
 from econml.dr import DRLearner
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from econml.metalearners import (DomainAdaptationLearner, SLearner, TLearner,
+                                 XLearner)
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+
+from src.train.candidate_models import candidatePredictorTau
 
 
 class TestCandidateModels:

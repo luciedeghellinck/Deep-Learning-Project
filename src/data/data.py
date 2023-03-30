@@ -1,7 +1,7 @@
-from typing import Tuple, Generator
+from typing import Generator, Tuple
 
-import torch as th
 import numpy as np
+import torch as th
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset
 

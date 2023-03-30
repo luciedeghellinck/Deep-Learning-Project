@@ -1,5 +1,7 @@
-from src.measure.model_comparison_metrics import Rtrue, Regret, rankCorrelation, NRMSE
 import torch as th
+
+from src.measure.model_comparison_metrics import (NRMSE, Regret, Rtrue,
+                                                  rankCorrelation)
 
 
 class TestComparisonMetrics:

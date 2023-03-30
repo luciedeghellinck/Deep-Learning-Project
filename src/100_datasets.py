@@ -1,27 +1,24 @@
 import torch as th
-from torch.optim import Adam
-from torch.utils.data import TensorDataset, DataLoader
-from sklearn.model_selection import train_test_split
-from econml.metalearners import SLearner, XLearner, TLearner, DomainAdaptationLearner
 from econml.dr import DRLearner
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from econml.metalearners import (DomainAdaptationLearner, SLearner, TLearner,
+                                 XLearner)
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor
+from torch.optim import Adam
+from torch.utils.data import DataLoader, TensorDataset
 
 from src.data import ihdpDataset
-from src.train.model import CATEModel
-from src.train.loss import loss, Loss
-from src.train.training import fit
+from src.measure.model_comparison_metrics import NRMSE, Regret, rankCorrelation
+from src.select.performance_estimation import (IPW, outcome_regressor,
+                                               performanceEstimator, tau_risk)
 from src.train.candidate_models import candidatePredictorTau
-from src.select.performance_estimation import (
-    performanceEstimator,
-    IPW,
-    tau_risk,
-    outcome_regressor,
-)
-from src.measure.model_comparison_metrics import rankCorrelation, Regret, NRMSE
+from src.train.loss import Loss, loss
+from src.train.model import CATEModel
 from src.train.propensity_score import propensityRegression
+from src.train.training import fit
 
 n_hidden_layers = 3
 dim_hidden_layers = 100

@@ -1,9 +1,9 @@
 import abc
 from abc import ABC
 from typing import Tuple
-from sklearn.ensemble import GradientBoostingRegressor
 
 import torch as th
+from sklearn.ensemble import GradientBoostingRegressor
 
 from src.train.model import CATEModel
 

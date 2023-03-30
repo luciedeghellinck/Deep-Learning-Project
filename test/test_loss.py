@@ -1,12 +1,8 @@
 import pytest
 import torch as th
-from src.train.loss import (
-    loss,
-    weight,
-    adaptedWeight,
-    pi,
-    compute_distributional_distance,
-)
+
+from src.train.loss import (adaptedWeight, compute_distributional_distance,
+                            loss, pi, weight)
 from src.train.model import CATEModel
 
 

@@ -1,5 +1,5 @@
 import torch as th
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 from src.data import ihdpDataset
 

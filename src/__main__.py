@@ -1,15 +1,12 @@
 import json
-from typing import List, Dict
+from typing import Dict, List
 
 from src.data.data import ihdpDataset
-from src.measure.model_comparison_metrics import Regret, NRMSE, RankCorrelation
-from src.select.performance_estimation import (
-    IPW,
-    TauRisk,
-    CounterfactualCrossValidation,
-    SelectionMetric,
-)
-from src.train.candidate_models import ModelFactory, CATEModelFactory
+from src.measure.model_comparison_metrics import NRMSE, RankCorrelation, Regret
+from src.select.performance_estimation import (IPW,
+                                               CounterfactualCrossValidation,
+                                               SelectionMetric, TauRisk)
+from src.train.candidate_models import CATEModelFactory, ModelFactory
 
 
 def create_selection_methods(dataset_train, dataset_validate):
