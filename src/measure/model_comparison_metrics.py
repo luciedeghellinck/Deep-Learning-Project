@@ -9,9 +9,7 @@ from src.select.performance_estimation import SelectionMetric
 
 
 class Measurement(SelectionMetric, ABC):
-    def __init__(
-        self, selection_method: SelectionMetric, test_dataset
-    ):
+    def __init__(self, selection_method: SelectionMetric, test_dataset):
         super().__init__(selection_method.models)
         self.selection_method = selection_method
         self.dataset = test_dataset[:-1]

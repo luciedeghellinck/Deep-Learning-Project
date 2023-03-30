@@ -50,9 +50,7 @@ def main():
         )
         data.append(
             {
-                key: create_measurements(
-                    selection_method, dataset_test
-                )
+                key: create_measurements(selection_method, dataset_test)
                 for key, selection_method in selection_methods.items()
             }
         )
