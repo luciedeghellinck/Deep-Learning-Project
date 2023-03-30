@@ -1,4 +1,4 @@
-from src.candidate_models import candidatePredictorTau
+from src.train.candidate_models import candidatePredictorTau
 import torch as th
 from econml.metalearners import SLearner, XLearner, TLearner, DomainAdaptationLearner
 from econml.dr import DRLearner
@@ -9,7 +9,6 @@ from sklearn.svm import SVR
 
 
 class TestCandidateModels:
-
     def test_candidate_models_SLearner(self):
         x = th.rand(64, 25)
         t = th.randint(0, 2, (64,))
@@ -169,6 +168,3 @@ class TestCandidateModels:
         algo = SVR()
         tau = candidatePredictorTau(dataset, xtest, algo, learner)
         assert tau.size()[0] == 10
-
-
-

@@ -2,7 +2,11 @@ from functools import lru_cache
 from typing import Tuple
 import torch
 
-def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor], validation: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor]) -> torch.nn.Module:
+
+def propensityRegression(
+    dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor],
+    validation: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor],
+) -> torch.nn.Module:
     """
     Evaluates a regression function for the propensity given the known propensity scores
 
@@ -21,12 +25,10 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     # Call propensityScore to use the propensity for each input feature vector
 
     X, T, _ = dataset
+    X_val, T_val, _ = validation
 
     # logistic regression model
-    model = torch.nn.Sequential(
-        torch.nn.Linear(X.shape[1], 1),
-        torch.nn.Sigmoid()
-    )
+    model = torch.nn.Sequential(torch.nn.Linear(X.shape[1], 1), torch.nn.Sigmoid())
 
     criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -34,7 +36,7 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
     # Train model to predict T given X
     current_patience = 0
     patience = 5
-    lowest_loss = float('inf')
+    lowest_loss = float("inf")
     while current_patience < patience:
         optimizer.zero_grad()
         t_pred = model(X).squeeze(-1)
@@ -42,12 +44,12 @@ def propensityRegression(dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Ten
         loss.backward()
         optimizer.step()
 
-        validation_loss = criterion
+        validation_loss = criterion(model(X_val).squeeze(-1), T_val.float())
 
-        if loss >= lowest_loss:
+        if validation_loss >= lowest_loss:
             current_patience += 1
         else:
             current_patience = 0
-            lowest_loss = loss
+            lowest_loss = validation_loss
 
     return model

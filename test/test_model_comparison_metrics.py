@@ -1,9 +1,8 @@
-from src.model_comparison_metrics import Rtrue, Regret, rankCorrelation, NRMSE
+from src.measure.model_comparison_metrics import Rtrue, Regret, rankCorrelation, NRMSE
 import torch as th
 
 
 class TestComparisonMetrics:
-
     def test_Rtrue(self):
         tau_hat = th.rand(64)
         tau_tilde = th.rand(64)
@@ -32,5 +31,3 @@ class TestComparisonMetrics:
 
         nrmse = NRMSE(tau_hat_selected, tau_hat_best)
         assert type(nrmse) == float
-
-

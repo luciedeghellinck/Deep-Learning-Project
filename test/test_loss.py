@@ -1,11 +1,16 @@
 import pytest
 import torch as th
-from src.loss import loss, weight, adaptedWeight, pi, compute_distributional_distance
-from src.model import CATEModel
+from src.train.loss import (
+    loss,
+    weight,
+    adaptedWeight,
+    pi,
+    compute_distributional_distance,
+)
+from src.train.model import CATEModel
 
 
 class TestLoss:
-
     def test_weight(self):
         x = th.rand(64, 25)
         t = th.randint(0, 2, (64,))
@@ -34,7 +39,13 @@ class TestLoss:
         assert adaptedWeights.size()[0] == 64
 
     def test_loss(self):
-        model = CATEModel(input_size=25, dim_hidden_layers=100, dim_representation=100, n_hidden_layers=3, alpha=0.05)
+        model = CATEModel(
+            input_size=25,
+            dim_hidden_layers=100,
+            dim_representation=100,
+            n_hidden_layers=3,
+            alpha=0.05,
+        )
 
         x = th.rand(64, 25)
         t = th.randint(0, 2, (64,))
@@ -45,12 +56,10 @@ class TestLoss:
 
         assert l.size() == ()
 
-    @pytest.mark.parametrize("representation_dimension, distribution_offset", [(1, 1),
-                                                                               (25, 1),
-                                                                               (1, 2),
-                                                                               (25, 2),
-                                                                               (1, 3),
-                                                                               (25, 3)])
+    @pytest.mark.parametrize(
+        "representation_dimension, distribution_offset",
+        [(1, 1), (25, 1), (1, 2), (25, 2), (1, 3), (25, 3)],
+    )
     def test_loss_values(self, representation_dimension, distribution_offset):
         th.random.manual_seed(1)
         t_first = th.zeros(200)
@@ -60,21 +69,22 @@ class TestLoss:
 
         y = th.rand(400)
 
-        dataset = th.concat([x_first, x_second], dim=0), th.concat([t_first, t_second], dim=0).int(), y
+        dataset = (
+            th.concat([x_first, x_second], dim=0),
+            th.concat([t_first, t_second], dim=0).int(),
+            y,
+        )
         model = TestModel()
         divergence = compute_distributional_distance(dataset, model, 1)
 
-        assert divergence == pytest.approx(representation_dimension*distribution_offset**2, rel=0.1)
+        assert divergence == pytest.approx(
+            representation_dimension * distribution_offset**2, rel=0.1
+        )
 
 
 class TestModel(CATEModel):
-
     def __init__(self):
         super().__init__(1, 1, 1, 1, 1)
         self.head_0 = th.nn.Identity()
         self.head_1 = th.nn.Identity()
         self.phi = th.nn.Identity()
-
-
-
-

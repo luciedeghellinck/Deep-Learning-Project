@@ -3,14 +3,22 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from src.data import ihdpDataset
 
-class TestDataset:
 
+class TestDataset:
     def test_loading_ihdp(self):
         dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz")
-        assert dataset.X.size()[0] == 100 and dataset.X.size()[1] == 75 and dataset.X.size()[2] == 25
+        assert (
+            dataset.X.size()[0] == 100
+            and dataset.X.size()[1] == 75
+            and dataset.X.size()[2] == 25
+        )
         assert dataset.T.size()[0] == 100 and dataset.T.size()[1] == 75
         assert dataset.Y.size()[0] == 100 and dataset.Y.size()[1] == 75
-        subDataset = th.Tensor(dataset.X[0]), th.tensor(dataset.T[0]), th.Tensor(dataset.Y[0])
+        subDataset = (
+            th.Tensor(dataset.X[0]),
+            th.tensor(dataset.T[0]),
+            th.Tensor(dataset.Y[0]),
+        )
 
         loader = DataLoader(TensorDataset(*subDataset), batch_size=64)
 

@@ -1,6 +1,6 @@
 import torch as th
 
-from src.propensity_score import propensityRegression
+from src.train.propensity_score import propensityRegression
 
 
 def test_propensity_estimator():
@@ -17,4 +17,3 @@ def test_propensity_estimator():
 
     indices = th.round(model.forward(x).squeeze(dim=-1)).int()
     assert th.all(indices == t)
-

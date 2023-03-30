@@ -10,13 +10,18 @@ from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
 
 from src.data import ihdpDataset
-from src.model import CATEModel
-from src.loss import loss, Loss
-from src.training import fit, train, test
-from src.candidate_models import candidatePredictorTau
-from src.performance_estimation import performanceEstimator, IPW, tau_risk, outcome_regressor
-from src.model_comparison_metrics import rankCorrelation, Regret, NRMSE
-from src.propensity_score import propensityRegression
+from src.train.model import CATEModel
+from src.train.loss import loss, Loss
+from src.train.training import fit
+from src.train.candidate_models import candidatePredictorTau
+from src.select.performance_estimation import (
+    performanceEstimator,
+    IPW,
+    tau_risk,
+    outcome_regressor,
+)
+from src.measure.model_comparison_metrics import rankCorrelation, Regret, NRMSE
+from src.train.propensity_score import propensityRegression
 
 n_hidden_layers = 3
 dim_hidden_layers = 100
@@ -28,7 +33,13 @@ train_ratio = 0.35
 validation_ratio = 0.35
 test_ratio = 0.30
 
-MLAlgorithms = [DecisionTreeRegressor(), RandomForestRegressor(), GradientBoostingRegressor(), Ridge(), SVR()]
+MLAlgorithms = [
+    DecisionTreeRegressor(),
+    RandomForestRegressor(),
+    GradientBoostingRegressor(),
+    Ridge(),
+    SVR(),
+]
 metaLearners = [SLearner, XLearner, TLearner, DomainAdaptationLearner, DRLearner]
 
 # CHECK WHAT TO DO WITH THE TWO DATA FILES
@@ -40,14 +51,23 @@ model = CATEModel(25, n_hidden_layers, dim_hidden_layers, 1, alpha, dropout_rate
 optimizer = Adam(model.parameters(), lr=learning_rate)
 criterion = loss
 
-metrics = th.empty(4, 3, realisation_number)  # dim=0: Methods (IPW, TauRisk, PlugIn, CFCV); dim=1: metric (Correlation, regret, NRMSE); dim=2: realisations
-table1 = th.empty(4, 3, 3)  # dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case
+metrics = th.empty(
+    4, 3, realisation_number
+)  # dim=0: Methods (IPW, TauRisk, PlugIn, CFCV); dim=1: metric (Correlation, regret, NRMSE); dim=2: realisations
+table1 = th.empty(
+    4, 3, 3
+)  # dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case
 
 for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
-    x_train, x_test, t_train, t_test, y_train, y_test = train_test_split(X.clone().detach(), T.clone().detach(),
-                                                                         Y.clone().detach(), test_size=1 - train_ratio)
-    x_val, x_test, t_val, t_test, y_val, y_test = train_test_split(x_test, t_test, y_test, test_size=test_ratio / (
-            test_ratio + validation_ratio))
+    x_train, x_test, t_train, t_test, y_train, y_test = train_test_split(
+        X.clone().detach(),
+        T.clone().detach(),
+        Y.clone().detach(),
+        test_size=1 - train_ratio,
+    )
+    x_val, x_test, t_val, t_test, y_val, y_test = train_test_split(
+        x_test, t_test, y_test, test_size=test_ratio / (test_ratio + validation_ratio)
+    )
 
     datasetTrain = x_train, t_train, y_train
     loader = DataLoader(TensorDataset(*datasetTrain), batch_size=batch_size)
@@ -63,15 +83,31 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     tauTildeVal = model.forward(x_val)
 
     ## TauHat and comparison
-    bestPerformance = [float('inf'), float('inf'), float('inf'), float('inf')]  # bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
-    tauSelected = [th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val)), th.empty(len(y_val))]  # tauSelectedCFCV, tauSelectedIPW, tauSelectedTauRisk, tauSelectedPlugIn
+    bestPerformance = [
+        float("inf"),
+        float("inf"),
+        float("inf"),
+        float("inf"),
+    ]  # bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
+    tauSelected = [
+        th.empty(len(y_val)),
+        th.empty(len(y_val)),
+        th.empty(len(y_val)),
+        th.empty(len(y_val)),
+    ]  # tauSelectedCFCV, tauSelectedIPW, tauSelectedTauRisk, tauSelectedPlugIn
     for algo in MLAlgorithms:
         for learner in metaLearners:
-            tauHat = candidatePredictorTau((x_train, t_train, y_train), x_val, algo, learner)
+            tauHat = candidatePredictorTau(
+                (x_train, t_train, y_train), x_val, algo, learner
+            )
             ## CHECK THE ARGUMENTS
             performanceCFCV = performanceEstimator(tauTildeVal, tauHat)
-            performanceIPW = IPW((x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat)
-            performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat)
+            performanceIPW = IPW(
+                (x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat
+            )
+            performanceTauRisk = tau_risk(
+                (x_train, t_train, y_train), propensityRegression(datasetTrain), tauHat
+            )
             performancePlugIn = outcome_regressor((x_train, t_train, y_train))
             if performanceCFCV < bestPerformance[0]:
                 bestPerformance[0] = performanceCFCV
@@ -91,15 +127,31 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     tauTildeTest = th.empty(len(y_test))
 
     ## TauHat and comparison
-    bestPerformance = [float('inf'), float('inf'), float('inf'), float('inf')]  #bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
-    tauBest = [th.empty(len(y_test)), th.empty(len(y_test)), th.empty(len(y_test)), th.empty(len(y_test))]  #tauBestCFCV, tauBestIPW, tauBestTauRisk, tauBestPlugIn
+    bestPerformance = [
+        float("inf"),
+        float("inf"),
+        float("inf"),
+        float("inf"),
+    ]  # bestPerformanceCFCV, bestPerformanceIPW, bestPerformanceTauRisk, bestPerformancePlugIn
+    tauBest = [
+        th.empty(len(y_test)),
+        th.empty(len(y_test)),
+        th.empty(len(y_test)),
+        th.empty(len(y_test)),
+    ]  # tauBestCFCV, tauBestIPW, tauBestTauRisk, tauBestPlugIn
     for algo in MLAlgorithms:
         for learner in metaLearners:
-            tauHat = candidatePredictorTau((x_train, t_train, y_train), x_test, algo, learner)
+            tauHat = candidatePredictorTau(
+                (x_train, t_train, y_train), x_test, algo, learner
+            )
             performanceCFCV = performanceEstimator(tauTildeTest, tauHat)
             ## CHECK THE ARGUMENTS -> what changes compared to the validation set? Where do we add the tauhat in the outcome regressor...
-            performanceIPW = IPW((x_train, t_train, y_train), propensityRegression, tauHat)
-            performanceTauRisk = tau_risk((x_train, t_train, y_train), propensityRegression, tauHat)
+            performanceIPW = IPW(
+                (x_train, t_train, y_train), propensityRegression, tauHat
+            )
+            performanceTauRisk = tau_risk(
+                (x_train, t_train, y_train), propensityRegression, tauHat
+            )
             performancePlugIn = outcome_regressor((x_train, t_train, y_train))
             if performanceCFCV < bestPerformance[0]:
                 bestPerformance[0] = performanceCFCV
@@ -119,7 +171,9 @@ for i, (X, T, Y) in enumerate(zip(dataset.X, dataset.T, dataset.Y)):
     # metrics: dim=0: Methods (IPW, TauRisk, PlugIn, CFCV); dim=1: metric (Correlation, regret, NRMSE); dim=2: realisations
     for method in range(4):
         metrics[method][0][i] = rankCorrelation(tauSelected[method], tauBest[method])
-        metrics[method][1][i] = Regret(tauSelected[method], tauBest[method], tauTildeTest)
+        metrics[method][1][i] = Regret(
+            tauSelected[method], tauBest[method], tauTildeTest
+        )
         metrics[method][2][i] = NRMSE(tauSelected[method], tauBest[method])
 
 # table1: dim=0: 4 methods; dim=1: 3 metrics; dim=2: mean, stdErr, Worst-Case

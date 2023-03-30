@@ -4,21 +4,18 @@ import torch as th
 from torch.utils.data import DataLoader
 
 
-def fit(train_loader: DataLoader,
-        test_loader: DataLoader,
-        model: th.nn.Module,
-        optimizer: th.optim.Optimizer,
-        criterion: th.nn.Module,
-        epochs: int):
+def fit(
+    train_loader: DataLoader,
+    test_loader: DataLoader,
+    model: th.nn.Module,
+    optimizer: th.optim.Optimizer,
+    criterion: th.nn.Module,
+    epochs: int,
+):
     for _ in range(epochs):
-        train_loss = train(train_loader,
-                                     model,
-                                     optimizer,
-                                     criterion)
+        train_loss = train(train_loader, model, optimizer, criterion)
         print(f"train loss: {train_loss}")
-        val_loss = test(test_loader,
-                                  model,
-                                  criterion)
+        val_loss = test(test_loader, model, criterion)
         print(f"val loss: {val_loss}")
 
 

@@ -15,6 +15,7 @@ jupyter = "*"
 scipy = "*"
 sklearn = "*"
 scikit-learn = "*"
+black = "*"
 
 [dev-packages]
 pytest = "*"
