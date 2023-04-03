@@ -123,10 +123,12 @@ class CounterfactualCrossValidation(SelectionMetric):
         return loss(predicted, plug_in_value)
 
 class PlugIn(SelectionMetric):
-    def __init__(self, models, cate_model: CATEModel, validation_dataset):
+    def __init__(self, models,
+                 validation_dataset,
+                 mu_values):
         super().__init__(models)
-        self.cate_model = cate_model
         self.dataset = validation_dataset
+        self.mu_values = mu_values
 
     def create_rating(self):
         self.rating = []
@@ -136,7 +138,8 @@ class PlugIn(SelectionMetric):
 
     def plug_in_validation(self, tau):
         loss = th.nn.MSELoss(reduction="mean")
-        X, T, Y, _, mu1, mu0 = self.dataset
+        X, T, Y = self.dataset
+        mu0, mu1 = self.mu_values
 
         plug_in_value = mu1 - mu0
         predicted = tau.predict(X)

@@ -18,8 +18,6 @@ class ihdpDataset(TensorDataset):
         t = th.from_numpy(data["t"]).int()
         yf = th.from_numpy(data["yf"])
         y_cf = th.from_numpy(data["ycf"])
-        mu1 = th.from_numpy(data["mu1"])
-        mu1 = th.from_numpy(data["mu0"])
 
         mask = t == 1
         ground_truth_cate = mask * (yf - y_cf) + ~mask * (y_cf - yf)
@@ -91,7 +89,7 @@ class ihdpDataset(TensorDataset):
                 mu0_test,
                 test_size=self.ratio[2] / (self.ratio[2] + self.ratio[1]),
             )
-            yield (x_train, t_train, y_train), (x_val, y_val, t_val, mu1_val, mu0_val), (
+            yield (x_train, t_train, y_train), (x_val, y_val, t_val), (mu0_val, mu1_val), (
                 x_test,
                 y_test,
                 t_test,
