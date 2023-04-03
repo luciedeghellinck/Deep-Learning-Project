@@ -1,6 +1,7 @@
 from typing import Generator, Tuple
 
 import numpy as np
+import torch
 import torch as th
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset
@@ -18,6 +19,7 @@ class ihdpDataset(TensorDataset):
         t = th.from_numpy(data["t"]).int()
         yf = th.from_numpy(data["yf"])
         y_cf = th.from_numpy(data["ycf"])
+        self.size = t.size()[0]
 
         mask = t == 1
         ground_truth_cate = mask * (yf - y_cf) + ~mask * (y_cf - yf)
@@ -95,3 +97,6 @@ class ihdpDataset(TensorDataset):
                 t_test,
                 cate_test,
             )
+
+    def __len__(self):
+        return self.size
