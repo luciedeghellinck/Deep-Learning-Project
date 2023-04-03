@@ -34,9 +34,9 @@ class Measurement(SelectionMetric, ABC):
         Returns:
             The performance metric as defined in Equation 1
         """
-        loss = th.nn.MSELoss(reduction="none")
+        loss = th.nn.MSELoss(reduction="sum")
         X, T, Y = self.dataset
-        tauHat = model.predict(X)
+        tauHat = model.effect(X)
         tauTilde = self.test_tau_values
         return loss(tauHat, tauTilde)
 

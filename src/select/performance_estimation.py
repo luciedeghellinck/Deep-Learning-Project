@@ -62,7 +62,7 @@ class IPW(SelectionMetric):
             ((1 - T) / (1 - propensity_scores)) * Y
         )
         loss = th.nn.MSELoss(reduction="mean")
-        return loss(plug_in_value, tau.predict(X))
+        return loss(plug_in_value, tau.effect(X))
 
 
 class TauRisk(SelectionMetric):
@@ -91,7 +91,7 @@ class TauRisk(SelectionMetric):
             1 / len(T) * th.sum((Y - expected_outcome) - (T - propensity_scores))
         )
         loss = th.nn.MSELoss(reduction="mean")
-        return loss(plug_in_value, tau.predict(X))
+        return loss(plug_in_value, tau.effect(X))
 
     @staticmethod
     def outcome_regressor(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]):
@@ -119,5 +119,5 @@ class CounterfactualCrossValidation(SelectionMetric):
         X, T, Y = self.dataset
 
         plug_in_value = self.cate_model.forward(X)
-        predicted = tau.predict(X)
+        predicted = tau.effect(X)
         return loss(predicted, plug_in_value)
