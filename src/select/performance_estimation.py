@@ -121,3 +121,26 @@ class CounterfactualCrossValidation(SelectionMetric):
         plug_in_value = self.cate_model.forward(X)
         predicted = tau.effect(X)
         return loss(predicted, plug_in_value)
+
+class PlugIn(SelectionMetric):
+    def __init__(self, models,
+                 validation_dataset,
+                 mu_values):
+        super().__init__(models)
+        self.dataset = validation_dataset
+        self.mu_values = mu_values
+
+    def create_rating(self):
+        self.rating = []
+        for tau in self.models:
+            self.rating.append(self.plug_in_validation(tau))
+        self.rating = th.stack(self.rating)
+
+    def plug_in_validation(self, tau):
+        loss = th.nn.MSELoss(reduction="mean")
+        X, T, Y = self.dataset
+        mu0, mu1 = self.mu_values
+
+        plug_in_value = mu1 - mu0
+        predicted = tau.predict(X)
+        return loss(predicted, plug_in_value)
