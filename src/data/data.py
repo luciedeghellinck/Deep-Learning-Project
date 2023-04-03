@@ -95,3 +95,13 @@ class ihdpDataset(TensorDataset):
                 t_test,
                 cate_test,
             )
+
+    def get_propensity_dataset(self):
+        x_prop, t_prop = self.tensors[:2]
+        x_prop = self.__reshape(x_prop)
+        t_prop = self.__reshape(t_prop)
+        return TensorDataset(x_prop, t_prop)
+
+    def __reshape(self, tensor):
+        x_realisation, x_size, x_features = tensor.size()
+        return th.reshape(tensor, (x_realisation*x_size, x_features))

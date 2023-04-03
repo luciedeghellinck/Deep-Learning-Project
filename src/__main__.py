@@ -42,11 +42,11 @@ def create_measurements(selection_method, test_data):
 
 
 def main():
-    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz", (0.35, 0.35, 0.30))
+    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.train.npz", (0.35, 0.35, 0.30))
     data = []
     for dataset_train, dataset_validate, mu_values, dataset_test in dataset:
         selection_methods: Dict[str, SelectionMetric] = create_selection_methods(
-            dataset_train, dataset_validate
+            dataset_train, dataset_validate, mu_values
         )
         data.append(
             {
