@@ -9,6 +9,7 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
+from sklearn import preprocessing
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -62,6 +63,7 @@ class ModelFactory:
             est = learner(model_regression=algo)
         else:
             raise Exception("This meta learner is not accepted")
+
         est.fit(Y=Y, T=T, X=X)
         return est
 
@@ -71,6 +73,7 @@ class CATEModelFactory:
 
     def __init__(
         self,
+        propensity_regressor,
         *,
         n_hidden_layers=3,
         dim_hidden_layers=100,
@@ -78,9 +81,9 @@ class CATEModelFactory:
         dim_representation=25,
         batch_size=256,
         alpha=0.356,
-        learning_rate=4.292 * 10 ** (-4),
+        learning_rate=4.292e-4,
         dropout_rate=0.2,
-        epochs=400
+        patience=2
     ):
         self.model_param_dict = {
             "input_size": input_size,
@@ -92,7 +95,8 @@ class CATEModelFactory:
         self.batch_size = batch_size
         self.alpha = alpha
         self.learning_rate = learning_rate
-        self.epochs = epochs
+        self.patience = patience
+        self.regressor = propensity_regressor
 
     def create(
         self,
@@ -100,14 +104,13 @@ class CATEModelFactory:
         validation_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor],
     ):
         model = CATEModel(**self.model_param_dict)
-        regressor = propensityRegression(dataset, validation_dataset)
-        loss = Loss(dataset, regressor, self.alpha)
+        loss = Loss(dataset, self.regressor, self.alpha)
         optimizer = Adam(model.parameters(), lr=self.learning_rate)
         data_loader = DataLoader(TensorDataset(*dataset), batch_size=self.batch_size)
         validation_data_loader = DataLoader(
             TensorDataset(*validation_dataset), batch_size=self.batch_size
         )
 
-        fit(data_loader, validation_data_loader, model, optimizer, loss, self.epochs)
+        fit(data_loader, validation_data_loader, model, optimizer, loss, self.patience)
 
-        return model, regressor
+        return model

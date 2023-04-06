@@ -62,7 +62,7 @@ class IPW(SelectionMetric):
             ((1 - T) / (1 - propensity_scores)) * Y
         )
         loss = th.nn.MSELoss(reduction="mean")
-        return loss(plug_in_value, th.Tensor(tau.effect(X)))
+        return loss(th.from_numpy(tau.effect(X)), plug_in_value)
 
 
 class TauRisk(SelectionMetric):

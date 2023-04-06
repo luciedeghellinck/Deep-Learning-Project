@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import torch
 import torch as th
 import torch.nn as nn
 
@@ -179,11 +180,8 @@ class Loss(th.nn.Module):
           float loss as defined in equation 12
         """
         empirical_weighted_risk = self.empirical_weighted_risk(dataset, model)
-        print(f"weighted risk: {empirical_weighted_risk}")
         distributional_distance = self.distributional_distance(dataset, model, alpha)
-        print(f"distributional_distance: {distributional_distance}")
         total_loss = empirical_weighted_risk + distributional_distance
-        print(f"total_loss: {total_loss}")
         return total_loss
 
     def empirical_weighted_risk(
@@ -193,7 +191,6 @@ class Loss(th.nn.Module):
     ):
         adapted_weights = self.adaptedWeight(dataset)
         l = self.loss_function(model.get_hypothesis(dataset[0], dataset[1]), dataset[2])
-
         return th.dot(adapted_weights, l) / dataset[0].size(0)
 
     def distributional_distance(
@@ -203,8 +200,6 @@ class Loss(th.nn.Module):
         alpha: float,
     ):
         # I don't know why but without these calls everything breaks.
-        print(dataset[1].size())
-        print(dataset[0].size())
         indices_not_treated = th.nonzero(dataset[1].int() == 0)
         indices_treated = th.nonzero(dataset[1].int() == 1)
 
@@ -231,10 +226,11 @@ class Loss(th.nn.Module):
         Returns:
           The float weight for the feature vector and the treatment type.
         """
-        propensity = self.regressor.forward(dataset[0]).squeeze(-1) + 1e-7
-        return (dataset[1] * (1 - 2 * propensity) + propensity**2) / (
+        propensity = self.regressor.forward(dataset[0]).squeeze(-1)
+        scores = (dataset[1] * (1 - 2 * propensity) + propensity**2) / (
             propensity * (1 - propensity)
         )
+        return scores
 
     @staticmethod
     def pi(dataset: Tuple[th.Tensor, th.Tensor, th.Tensor], t: int) -> th.Tensor:

@@ -10,13 +10,20 @@ def fit(
     model: th.nn.Module,
     optimizer: th.optim.Optimizer,
     criterion: th.nn.Module,
-    epochs: int,
+    patience: int = 5,
 ):
-    for _ in range(epochs):
+    curr_patience = 0
+    min_val_loss = float('inf')
+    while curr_patience <= patience:
         train_loss = train(train_loader, model, optimizer, criterion)
         print(f"train loss: {train_loss}")
         val_loss = test(test_loader, model, criterion)
         print(f"val loss: {val_loss}")
+        if val_loss <= min_val_loss:
+            min_val_loss = val_loss
+            curr_patience = 0
+        else:
+            curr_patience += 1
 
 
 # Copy and paste from the assignements --> check this
@@ -48,8 +55,10 @@ def train(train_loader, model, optimizer, criterion):
         # keep track of loss and accuracy
         avg_loss += loss
         total += data[0].size(0)
+    else:
+        i = 1
 
-    return avg_loss
+    return avg_loss / i
 
 
 def test(test_loader, model, criterion):
@@ -65,12 +74,14 @@ def test(test_loader, model, criterion):
     avg_loss = 0
     total = 0
     # iterate through batches
-    for data in test_loader:
+    for i, data in enumerate(test_loader):
         # zero the parameter gradients
         loss = criterion(data, model)
 
         # keep track of loss and accuracy
         avg_loss += loss
         total += data[0].size(0)
+    else:
+        i = 1
 
-    return avg_loss
+    return avg_loss / i
