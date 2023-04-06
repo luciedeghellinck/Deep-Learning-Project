@@ -45,7 +45,8 @@ class ModelFactory:
             for algorithm in self.algorithms:
                 model = self.candidatePredictorTau(dataset, algorithm(), learner)
                 models.append(model)
-
+        print(models)
+        print(len(models))
         return models
 
     def candidatePredictorTau(
@@ -94,16 +95,12 @@ class CATEModelFactory:
         self.learning_rate = learning_rate
         self.epochs = epochs
 
-    def create(
-        self,
-        dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor],
-        validation_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor],
-    ):
+    def create(self, training_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], validation_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]):
         model = CATEModel(**self.model_param_dict)
-        regressor = propensityRegression(dataset, validation_dataset)
-        loss = Loss(dataset, regressor, self.alpha)
+        regressor = propensityRegression(training_dataset, validation_dataset)
+        loss = Loss(training_dataset, regressor, self.alpha)
         optimizer = Adam(model.parameters(), lr=self.learning_rate)
-        data_loader = DataLoader(TensorDataset(*dataset), batch_size=self.batch_size)
+        data_loader = DataLoader(TensorDataset(*training_dataset), batch_size=self.batch_size)
         validation_data_loader = DataLoader(
             TensorDataset(*validation_dataset), batch_size=self.batch_size
         )

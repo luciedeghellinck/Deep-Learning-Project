@@ -14,9 +14,9 @@ def fit(
 ):
     for _ in range(epochs):
         train_loss = train(train_loader, model, optimizer, criterion)
-        print(f"train loss: {train_loss}")
+        # print(f"train loss: {train_loss}")
         val_loss = test(test_loader, model, criterion)
-        print(f"val loss: {val_loss}")
+        # print(f"val loss: {val_loss}")
 
 
 # Copy and paste from the assignements --> check this

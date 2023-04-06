@@ -179,11 +179,11 @@ class Loss(th.nn.Module):
           float loss as defined in equation 12
         """
         empirical_weighted_risk = self.empirical_weighted_risk(dataset, model)
-        print(f"weighted risk: {empirical_weighted_risk}")
+        # print(f"weighted risk: {empirical_weighted_risk}")
         distributional_distance = self.distributional_distance(dataset, model, alpha)
-        print(f"distributional_distance: {distributional_distance}")
+        # print(f"distributional_distance: {distributional_distance}")
         total_loss = empirical_weighted_risk + distributional_distance
-        print(f"total_loss: {total_loss}")
+        # print(f"total_loss: {total_loss}")
         return total_loss
 
     def empirical_weighted_risk(

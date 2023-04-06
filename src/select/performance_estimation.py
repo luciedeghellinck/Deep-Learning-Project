@@ -1,8 +1,10 @@
 import abc
 from abc import ABC
-from typing import Tuple
+from typing import List, Tuple
+
 
 import torch as th
+from sklearn.base import RegressorMixin
 from sklearn.ensemble import GradientBoostingRegressor
 
 from src.train.model import CATEModel
@@ -40,33 +42,32 @@ class SelectionMetric(ABC):
 
 
 class IPW(SelectionMetric):
-    def __init__(self, models, validation_dataset, propensity_regressor):
+    def __init__(self, models: List[RegressorMixin], validation_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], propensity_regressor: th.nn.Module):
         super().__init__(models)
-        self.dataset = validation_dataset
+        self.val_dataset = validation_dataset
         self.regressor = propensity_regressor
 
     def create_rating(self):
         self.rating = []
-        for tau in self.models:
-            self.rating.append(self.IPW(tau))
+        for tau_hat in self.models:
+            self.rating.append(self.IPW(tau_hat))
         self.rating = th.stack(self.rating)
 
-    def IPW(
-        self,
-        tau,
-    ):
-        X, T, Y = self.dataset
+    def IPW(self, tau_hat):
+        X, T, Y = self.val_dataset
         propensity_scores = self.regressor.forward(X)
 
         plug_in_value = T / propensity_scores * Y - (
             ((1 - T) / (1 - propensity_scores)) * Y
         )
         loss = th.nn.MSELoss(reduction="mean")
-        return loss(plug_in_value, tau.effect(X))
+        print("X size", X.size())
+        print(plug_in_value.size(), tau_hat.effect(X.numpy()).size())
+        return loss(plug_in_value, tau_hat.effect(X.numpy()))
 
 
 class TauRisk(SelectionMetric):
-    def __init__(self, models, train_dataset, validation_dataset, propensity_regressor):
+    def __init__(self, models: List[RegressorMixin], train_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], validation_dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor], propensity_regressor: th.nn.Module):
         super().__init__(models)
         self.dataset = validation_dataset
         self.regressor = propensity_regressor
