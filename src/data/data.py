@@ -16,21 +16,21 @@ class ihdpDataset(TensorDataset):
         """
         self.ratio = ratio
         data = np.load(data_path)
-        t = th.from_numpy(data["t"]).int()
-        yf = th.from_numpy(data["yf"])
-        y_cf = th.from_numpy(data["ycf"])
+        t = th.from_numpy(np.transpose(data["t"], (1, 0))).long()
+        yf = th.from_numpy(np.transpose(data["yf"], (1, 0)))
+        y_cf = th.from_numpy(np.transpose(data["ycf"], (1, 0)))
         self.size = t.size()[0]
+
 
         mask = t == 1
         ground_truth_cate = mask * (yf - y_cf) + ~mask * (y_cf - yf)
-
         super().__init__(
-            th.from_numpy(np.transpose(data["x"], (0, 2, 1))).float(),
-            th.from_numpy(data["t"]).int(),
-            th.from_numpy(data["yf"]).float(),
+            th.from_numpy(np.transpose(data["x"], (2, 0, 1))).float(),
+            th.from_numpy(np.transpose(data["t"], (1, 0))).long(),
+            th.from_numpy(np.transpose(data["yf"], (1, 0))).float(),
             ground_truth_cate.float(),
-            th.from_numpy(data["mu1"]).float(),
-            th.from_numpy(data["mu0"]).float(),
+            th.from_numpy(np.transpose(data["mu0"], (1, 0))).float(),
+            th.from_numpy(np.transpose(data["mu1"], (1, 0))).float(),
         )
 
     def __iter__(
@@ -97,6 +97,18 @@ class ihdpDataset(TensorDataset):
                 t_test,
                 cate_test,
             )
+
+    def get_propensity_dataset(self):
+        propensity_data = np.load("../ihdp_npci_1-1000.test.npz")
+        x_prop = th.from_numpy(np.transpose(propensity_data["x"], (2, 0, 1))).float()
+        t_prop = th.from_numpy(np.transpose(propensity_data["t"], (1, 0))).long()
+        x_prop = self.__reshape(x_prop)
+        t_prop = self.__reshape(t_prop.unsqueeze(-1)).squeeze()
+        return x_prop, t_prop
+
+    def __reshape(self, tensor):
+        realisation, size, features = tensor.size()
+        return th.reshape(tensor, (realisation*size, features))
 
     def __len__(self):
         return self.size

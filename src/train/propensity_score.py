@@ -3,10 +3,20 @@ from typing import Tuple
 
 import torch
 
+class PropensityRegressorFactory:
+
+    def __init__(self, propensity_dataset):
+        self.dataset = propensity_dataset
+
+    def create(self):
+        return propensityRegression(
+            self.dataset
+        )
+
 
 def propensityRegression(
-    dataset: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor],
-    validation: Tuple[torch.Tensor, torch.IntTensor, torch.Tensor],
+    dataset: Tuple[torch.Tensor, torch.IntTensor],
+    epochs: int = 2000
 ) -> torch.nn.Module:
     """
     Evaluates a regression function for the propensity given the known propensity scores
@@ -25,32 +35,25 @@ def propensityRegression(
     # return prop_score
     # Call propensityScore to use the propensity for each input feature vector
 
-    X, T, _ = dataset
-    X_val, T_val, _ = validation
+    X, T = dataset
+
+    # u, s, v = torch.pca_lowrank(X, 8)
+    # print(u.size(),s.size(),v.size())
+    # X = torch.matmul(torch.matmul(u, torch.diag(s)), torch.transpose(v, 0, 1))
 
     # logistic regression model
     model = torch.nn.Sequential(torch.nn.Linear(X.shape[1], 1), torch.nn.Sigmoid())
 
     criterion = torch.nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.005, weight_decay=0.0005)
+    lr = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
-    # Train model to predict T given X
-    current_patience = 0
-    patience = 5
-    lowest_loss = float("inf")
-    while current_patience < patience:
+    for _ in range(epochs):
         optimizer.zero_grad()
         t_pred = model(X).squeeze(-1)
         loss = criterion(t_pred, T.float())
         loss.backward()
         optimizer.step()
-
-        validation_loss = criterion(model(X_val).squeeze(-1), T_val.float())
-
-        if validation_loss >= lowest_loss:
-            current_patience += 1
-        else:
-            current_patience = 0
-            lowest_loss = validation_loss
+        lr.step(loss)
 
     return model
