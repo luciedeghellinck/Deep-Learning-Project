@@ -36,7 +36,7 @@ class Measurement(SelectionMetric, ABC):
         """
         loss = th.nn.MSELoss(reduction="sum")
         X, T, Y = self.dataset
-        tauHat = model.effect(X)
+        tauHat = th.from_numpy(model.effect(X))
         tauTilde = self.test_tau_values
         return loss(tauHat, tauTilde)
 
@@ -55,7 +55,7 @@ class Regret(Measurement):
             The regret between the two CATE predictors
         """
         r_selected = self.r_true(self.selection_method.get_best_model())
-        r_best = self.r_true(self.best_model)
+        r_best = self.r_true(self.get_best_model())
         return th.sum((r_selected - r_best) / r_best)
 
 

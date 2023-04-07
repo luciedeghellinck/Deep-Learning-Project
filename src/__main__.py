@@ -8,17 +8,18 @@ from src.select.performance_estimation import (IPW,
                                                CounterfactualCrossValidation,
                                                SelectionMetric, TauRisk, PlugIn)
 from src.train.candidate_models import CATEModelFactory, ModelFactory
+from src.train.propensity_score import PropensityRegressorFactory
 
 
-def create_selection_methods(dataset_train: Tuple[th.Tensor, th.IntTensor, th.Tensor], dataset_validate: Tuple[th.Tensor, th.IntTensor, th.Tensor], mu_values: Tuple[th.Tensor, th.IntTensor]) -> th.Tensor:
+def create_selection_methods(dataset_train: Tuple[th.Tensor, th.IntTensor, th.Tensor], dataset_validate: Tuple[th.Tensor, th.IntTensor, th.Tensor], mu_values: Tuple[th.Tensor, th.IntTensor], propensity_dataset) -> list:
     tau_hat_models = ModelFactory().create(dataset_train)
-    CATE_tilde_model, propensity_regressor = CATEModelFactory().create(dataset_train, dataset_validate)
+    propensity_regressor = PropensityRegressorFactory(propensity_dataset).create()
+    CATE_tilde_model = CATEModelFactory(propensity_regressor).create(dataset_train, dataset_validate)
     # initilisation of the 4 methods
-    selection_methods = th.tensor([IPW(tau_hat_models, dataset_validate, propensity_regressor),
-                                   TauRisk(tau_hat_models, dataset_train, dataset_validate, propensity_regressor),
-                                   PlugIn(tau_hat_models, dataset_train, mu_values),
-                                   CounterfactualCrossValidation(tau_hat_models, CATE_tilde_model, dataset_validate)
-                                   ])
+    selection_methods = [IPW(tau_hat_models, dataset_validate, propensity_regressor),
+                         TauRisk(tau_hat_models, dataset_train, dataset_validate, propensity_regressor),
+                         PlugIn(tau_hat_models, dataset_train, mu_values),
+                         CounterfactualCrossValidation(tau_hat_models, CATE_tilde_model, dataset_validate)]
     return selection_methods
 
 
@@ -81,7 +82,7 @@ def main():
     dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz", (0.35, 0.35, 0.30))
     data = th.empty(len(dataset), 4, 3)  # dim=0: 100 sets; dim=1: selection method (IPW, TauRisk, PlugIn, CFCV); dim=2: measurement (regret, nrmse, rankCorrelation);
     for i, (dataset_train, dataset_validate, mu_values, dataset_test) in enumerate(dataset):
-        selection_methods = create_selection_methods(dataset_train, dataset_validate, mu_values)  # Tensor: [IPW, TauRisk, PlugIn, CFCV]
+        selection_methods = create_selection_methods(dataset_train, dataset_validate, mu_values, dataset.get_propensity_dataset())  # Tensor: [IPW, TauRisk, PlugIn, CFCV]
         for j, selection_method in enumerate(selection_methods): #for each of IPW, TauRisk, PlugIn, CFCV
             measurements = create_measurements(selection_method, dataset_test)  # Tensor: [regret, nrmse, rankCorrelation]
             data[i][j] = measurements

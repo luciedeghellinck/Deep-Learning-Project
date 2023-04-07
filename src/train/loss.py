@@ -43,12 +43,10 @@ class SinkhornDistance(nn.Module):
         mu = (
             th.empty(batch_size, x_points, dtype=th.float, requires_grad=False)
             .fill_(1.0 / x_points)
-            .squeeze()
         )
         nu = (
             th.empty(batch_size, y_points, dtype=th.float, requires_grad=False)
             .fill_(1.0 / y_points)
-            .squeeze()
         )
 
         u = th.zeros_like(mu)
@@ -203,13 +201,14 @@ class Loss(th.nn.Module):
         alpha: float,
     ):
         # I don't know why but without these calls everything breaks.
-        print(dataset[1].size())
-        print(dataset[0].size())
         indices_not_treated = th.nonzero(dataset[1].int() == 0)
         indices_treated = th.nonzero(dataset[1].int() == 1)
 
         x_not_treated = dataset[0][indices_not_treated].squeeze(dim=1)
         x_treated = dataset[0][indices_treated].squeeze(dim=1)
+
+        if len(x_treated) == 0 or len(x_not_treated) == 0:
+            return 0
 
         representation_no_treatment = model.get_representation(x_not_treated)
         representation_treatment = model.get_representation(x_treated)

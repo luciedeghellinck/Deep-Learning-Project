@@ -55,15 +55,15 @@ class IPW(SelectionMetric):
 
     def IPW(self, tau_hat):
         X, T, Y = self.val_dataset
-        propensity_scores = self.regressor.forward(X)
+        propensity_scores = self.regressor.forward(X).squeeze()
 
         plug_in_value = T / propensity_scores * Y - (
             ((1 - T) / (1 - propensity_scores)) * Y
         )
         loss = th.nn.MSELoss(reduction="mean")
         print("X size", X.size())
-        print(plug_in_value.size(), tau_hat.effect(X.numpy()).size())
-        return loss(plug_in_value, tau_hat.effect(X.numpy()))
+        print(plug_in_value.size(), tau_hat.effect(X.numpy()).size)
+        return loss(plug_in_value, th.from_numpy(tau_hat.effect(X.numpy())))
 
 
 class TauRisk(SelectionMetric):
@@ -85,14 +85,14 @@ class TauRisk(SelectionMetric):
     ):
         X, T, Y = self.dataset
 
-        propensity_scores = self.regressor.forward(X)
+        propensity_scores = self.regressor.forward(X).squeeze()
         expected_outcome = self.outcome_reg.predict(X)
 
         plug_in_value = (
-            1 / len(T) * th.sum((Y - expected_outcome) - (T - propensity_scores))
+            (Y - expected_outcome) - (T - propensity_scores)
         )
         loss = th.nn.MSELoss(reduction="mean")
-        return loss(plug_in_value, tau.effect(X))
+        return loss(plug_in_value, th.from_numpy(tau.effect(X)))
 
     @staticmethod
     def outcome_regressor(dataset: Tuple[th.Tensor, th.IntTensor, th.Tensor]):
@@ -119,8 +119,8 @@ class CounterfactualCrossValidation(SelectionMetric):
         loss = th.nn.MSELoss(reduction="mean")
         X, T, Y = self.dataset
 
-        plug_in_value = self.cate_model.forward(X)
-        predicted = tau.effect(X)
+        plug_in_value = self.cate_model.forward(X).squeeze()
+        predicted = th.from_numpy(tau.effect(X))
         return loss(predicted, plug_in_value)
 
 class PlugIn(SelectionMetric):
@@ -143,5 +143,5 @@ class PlugIn(SelectionMetric):
         mu0, mu1 = self.mu_values
 
         plug_in_value = mu1 - mu0
-        predicted = tau.predict(X)
+        predicted = th.from_numpy(tau.effect(X))
         return loss(predicted, plug_in_value)
