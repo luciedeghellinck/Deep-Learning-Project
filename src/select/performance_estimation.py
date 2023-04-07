@@ -1,4 +1,5 @@
 import abc
+import logging
 from abc import ABC
 from typing import List, Tuple
 
@@ -18,18 +19,18 @@ class SelectionMetric(ABC):
     def get_best_model(self):
         self.rate_models()
         best = th.argmin(self.rating)
+        logging.debug(f"Best model for {self.__class__.__name__} was  {best.item()}")
         return self.models[best.item()]
 
     def get_model_ranking(self):
         self.rate_models()
         sorted_indices = th.argsort(self.rating)
-        ranking = th.Tensor(
-            [
-                (sorted_indices == i).nonzero(as_tuple=True)[0]
+        ranking = [
+                (sorted_indices == i).nonzero(as_tuple=True)[0].item()
                 for i, _ in enumerate(self.models)
             ]
-        )
-        return ranking
+        logging.debug(f"model ranking for {self.__class__.__name__} was {ranking}")
+        return th.Tensor(ranking)
 
     def rate_models(self):
         if self.rating is None:
@@ -61,8 +62,6 @@ class IPW(SelectionMetric):
             ((1 - T) / (1 - propensity_scores)) * Y
         )
         loss = th.nn.MSELoss(reduction="mean")
-        print("X size", X.size())
-        print(plug_in_value.size(), tau_hat.effect(X.numpy()).size)
         return loss(plug_in_value, th.from_numpy(tau_hat.effect(X.numpy())))
 
 

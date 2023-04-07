@@ -1,4 +1,5 @@
 import abc
+import logging
 from abc import ABC
 from typing import List
 
@@ -21,6 +22,16 @@ class Measurement(SelectionMetric, ABC):
             self.rating.append(self.r_true(tau))
         self.rating = th.stack(self.rating)
 
+    @staticmethod
+    def log_measure(name):
+        def top_level_wrapper(measure_func):
+            def wrapper(self):
+                outcome = measure_func(self)
+                logging.info(f"outcome of {name} was {outcome}")
+                return outcome
+            return wrapper
+        return top_level_wrapper
+
     @abc.abstractmethod
     def get_measure(self):
         pass
@@ -42,6 +53,7 @@ class Measurement(SelectionMetric, ABC):
 
 
 class Regret(Measurement):
+    @Measurement.log_measure("regret")
     def get_measure(self):
         """
         Calculates the regret: the difference between the true performance of the selected model and that of the best
@@ -60,6 +72,7 @@ class Regret(Measurement):
 
 
 class RankCorrelation(Measurement):
+    @Measurement.log_measure("RankCorrelation")
     def get_measure(self):
         """
         Calculates the Spearman Rank Correlation
@@ -74,6 +87,7 @@ class RankCorrelation(Measurement):
 
 
 class NRMSE(Measurement):
+    @Measurement.log_measure("NRMSE")
     def get_measure(self):
         """
         Calculates the normalised root mean sqaured error between the CATE predictors
@@ -86,4 +100,4 @@ class NRMSE(Measurement):
         """
         squared_error = self.r_true(self.selection_method.get_best_model())
         nrmse = th.mean(squared_error) / th.var(self.test_tau_values)
-        return nrmse
+        return th.sqrt(nrmse)

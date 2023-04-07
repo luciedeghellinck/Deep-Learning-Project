@@ -1,8 +1,10 @@
-import json
-from typing import Dict, List, Tuple
+import logging
+from typing import Tuple
 import torch as th
+from tqdm import tqdm
 
 from src.data.data import ihdpDataset
+from src.logger import setup_logging
 from src.measure.model_comparison_metrics import NRMSE, RankCorrelation, Regret
 from src.select.performance_estimation import (IPW,
                                                CounterfactualCrossValidation,
@@ -40,7 +42,7 @@ def printTable1(data: th.Tensor):
         for method in range(4):
             table1[metric][method][0] = th.mean(data[metric][method])
             table1[metric][method][1] = th.std(data[metric][method])
-            if method == 2:  # for rankCorrelation
+            if metric == 2:  # for rankCorrelation
                 table1[metric][method][2] = th.min(data[metric][method])
             else:  # for regret and nrmse
                 table1[metric][method][2] = th.max(data[metric][method])
@@ -81,7 +83,8 @@ def printTable1(data: th.Tensor):
 def main():
     dataset = ihdpDataset("../dataset/ihdp_npci_1-100.train.npz", (0.35, 0.35, 0.30))
     data = th.empty(len(dataset), 4, 3)  # dim=0: 100 sets; dim=1: selection method (IPW, TauRisk, PlugIn, CFCV); dim=2: measurement (regret, nrmse, rankCorrelation);
-    for i, (dataset_train, dataset_validate, mu_values, dataset_test) in enumerate(dataset):
+    for i, (dataset_train, dataset_validate, mu_values, dataset_test) in tqdm(enumerate(dataset)):
+        logging.debug(f"starting epoch {i}")
         selection_methods = create_selection_methods(dataset_train, dataset_validate, mu_values, dataset.get_propensity_dataset())  # Tensor: [IPW, TauRisk, PlugIn, CFCV]
         for j, selection_method in enumerate(selection_methods): #for each of IPW, TauRisk, PlugIn, CFCV
             measurements = create_measurements(selection_method, dataset_test)  # Tensor: [regret, nrmse, rankCorrelation]
@@ -90,4 +93,5 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging()
     main()

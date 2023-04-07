@@ -1,0 +1,45 @@
+IPW:
+
+   Regret:
+
+      Mean: 1.802060842514038   Standard deviation: 1.789538025856018   Worst case: 8.666708946228027
+   NRMSE:
+
+      Mean: 204.9505615234375   Standard deviation: 121.6177978515625   Worst case: 761.7332763671875
+   Rank Correlation:
+
+      Mean: 0.34327659010887146   Standard deviation: 0.3231208622455597   Worst case: 0.9621616005897522
+Tau Risk:
+
+   Regret:
+
+      Mean: 2.7790563106536865   Standard deviation: 2.735459804534912   Worst case: 14.774846076965332
+   NRMSE:
+
+      Mean: 281.9902038574219   Standard deviation: 135.95501708984375   Worst case: 801.6082763671875
+   Rank Correlation:
+
+      Mean: 0.31979578733444214   Standard deviation: 0.2953929305076599   Worst case: 0.9825313091278076
+Plug-in:
+
+   Regret:
+
+      Mean: 3.057056188583374   Standard deviation: 2.403174638748169   Worst case: 0.7093394994735718
+   NRMSE:
+
+      Mean: 288.5118103027344   Standard deviation: 105.9831771850586   Worst case: 158.5540771484375
+   Rank Correlation:
+
+      Mean: 0.3661336898803711   Standard deviation: 0.33161723613739014   Worst case: 4.081236329511739e-05
+CFCV:
+
+   Regret:
+
+      Mean: 3.0604469776153564   Standard deviation: 2.4089066982269287   Worst case: 12.571235656738281
+   NRMSE:
+
+      Mean: 288.5435791015625   Standard deviation: 105.93295288085938   Worst case: 585.9861450195312
+   Rank Correlation:
+
+      Mean: 0.2791321575641632   Standard deviation: 0.2957402467727661   Worst case: 0.9941767454147339
+
