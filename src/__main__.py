@@ -79,7 +79,7 @@ def printTable1(data: th.Tensor):
 
 
 def main():
-    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.test.npz", (0.35, 0.35, 0.30))
+    dataset = ihdpDataset("../dataset/ihdp_npci_1-100.train.npz", (0.35, 0.35, 0.30))
     data = th.empty(len(dataset), 4, 3)  # dim=0: 100 sets; dim=1: selection method (IPW, TauRisk, PlugIn, CFCV); dim=2: measurement (regret, nrmse, rankCorrelation);
     for i, (dataset_train, dataset_validate, mu_values, dataset_test) in enumerate(dataset):
         selection_methods = create_selection_methods(dataset_train, dataset_validate, mu_values, dataset.get_propensity_dataset())  # Tensor: [IPW, TauRisk, PlugIn, CFCV]

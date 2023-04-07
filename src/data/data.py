@@ -99,7 +99,7 @@ class ihdpDataset(TensorDataset):
             )
 
     def get_propensity_dataset(self):
-        propensity_data = np.load("../ihdp_npci_1-1000.test.npz")
+        propensity_data = np.load("../dataset/ihdp_npci_1-100.train.npz")
         x_prop = th.from_numpy(np.transpose(propensity_data["x"], (2, 0, 1))).float()
         t_prop = th.from_numpy(np.transpose(propensity_data["t"], (1, 0))).long()
         x_prop = self.__reshape(x_prop)

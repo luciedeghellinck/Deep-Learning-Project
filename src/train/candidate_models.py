@@ -78,9 +78,9 @@ class CATEModelFactory:
         dim_representation=25,
         batch_size=256,
         alpha=0.356,
-        learning_rate=4.292 * 10 ** (-4),
+        learning_rate=4.292e-4,
         dropout_rate=0.2,
-        epochs=400
+        epochs=30
     ):
         self.regressor = regressor
         self.model_param_dict = {
